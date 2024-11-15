@@ -41,6 +41,17 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Write the .po file using indented style.",
         )
+        parser.add_argument(
+            "--width",
+            type=int,
+            action="store",
+            help="Set the output page width. Long strings in the output files will be split across multiple lines in order to ensure that each line’s width (= number of screen columns) is less or equal to the given number.",
+        )
+        parser.add_argument(
+            "--no-fuzzy-matching",
+            action="store_true",
+            help="Do not use fuzzy matching when an exact match is not found. This may speed up the operation considerably.",
+        )
 
     @override
     def handle(self, *args, **options):
@@ -59,5 +70,12 @@ class Command(MakeMessagesCommand):
             self.xgettext_options.append("--indent")
             self.msgmerge_options.append("--indent")
             self.msgattrib_options.append("--indent")
+        if options["width"]:
+            self.xgettext_options.append(f"--width={options['width']}")
+            self.msgmerge_options.append(f"--width={options['width']}")
+            self.msgattrib_options.append(f"--width={options['width']}")
+
+        if options["no_fuzzy_matching"]:
+            self.msgmerge_options.append("--no-fuzzy-matching")
 
         super().handle(*args, **options)
