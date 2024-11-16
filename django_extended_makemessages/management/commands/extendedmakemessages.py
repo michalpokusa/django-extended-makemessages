@@ -5,14 +5,42 @@ except ImportError:
     def override(func):
         return func
 
+
+from argparse import _VersionAction, RawDescriptionHelpFormatter
+
+from django.core.management.base import CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
+
+import django_extended_makemessages
+
+
+class DjangoExtendedMakeMessagesHelpFormatter(
+    DjangoHelpFormatter, RawDescriptionHelpFormatter
+): ...
 
 
 class Command(MakeMessagesCommand):
 
+    help = MakeMessagesCommand.help + (
+        "..."
+    )
+
+    @override
+    def create_parser(self, prog_name: str, subcommand: str, **kwargs):
+        parser = super().create_parser(prog_name, subcommand, **kwargs)
+        parser.formatter_class = DjangoExtendedMakeMessagesHelpFormatter
+        return parser
+
     @override
     def add_arguments(self, parser: CommandParser):
         super().add_arguments(parser)
+
+        # Replace --version option
+        for action in parser._actions:
+            if isinstance(action, _VersionAction):
+                action.version = django_extended_makemessages.__version__
+
+        # Add new arguments
         parser.add_argument(
             "--extract-all",
             action="store_true",
@@ -28,7 +56,6 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Always write an output file even if no message is defined.",
         )
-
         sort_group = parser.add_mutually_exclusive_group()
         sort_group.add_argument(
             "--sort-output",
@@ -40,7 +67,6 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Sort output by file location.",
         )
-
         parser.add_argument(
             "--indent",
             action="store_true",
