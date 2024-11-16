@@ -53,6 +53,8 @@ class Command(MakeMessagesCommand):
         )
         parser.add_argument(
             "--keyword",
+            nargs="?",
+            const=None,
             action="append",
             help="Specify keywordspec as an additional keyword to be looked for. Without a keywordspec, the option means to not use default keywords.",
         )
@@ -94,9 +96,18 @@ class Command(MakeMessagesCommand):
             self.msgmerge_options.append("--no-fuzzy-matching")
         if options["extract_all"]:
             self.xgettext_options.append("--extract-all")
-        if options["keyword"]:
+        if options["keyword"] is not None:
+            assert isinstance(options["keyword"], list)
+
+            # Remove default keywords
+            if None in options["keyword"]:
+                self.xgettext_options.append("--keyword")
+
+            # Add custom keywords
             self.xgettext_options += [
-                f"--keyword={keywordspec}" for keywordspec in options["keyword"]
+                f"--keyword={keywordspec}"
+                for keywordspec in options["keyword"]
+                if isinstance(keywordspec, str)
             ]
 
         # Common options
