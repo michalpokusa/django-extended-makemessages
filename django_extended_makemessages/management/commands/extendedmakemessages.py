@@ -19,6 +19,11 @@ class Command(MakeMessagesCommand):
             help="Extract all strings.",
         )
         parser.add_argument(
+            "--keyword",
+            action="append",
+            help="Specify keywordspec as an additional keyword to be looked for. Without a keywordspec, the option means to not use default keywords.",
+        )
+        parser.add_argument(
             "--force-po",
             action="store_true",
             help="Always write an output file even if no message is defined.",
@@ -58,6 +63,10 @@ class Command(MakeMessagesCommand):
 
         if options["extract_all"]:
             self.xgettext_options.append("--extract-all")
+        if options["keyword"]:
+            self.xgettext_options += [
+                f"--keyword={keywordspec}" for keywordspec in options["keyword"]
+            ]
         if options["force_po"]:
             self.xgettext_options.append("--force-po")
 
