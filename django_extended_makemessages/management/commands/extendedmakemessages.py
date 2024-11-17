@@ -159,6 +159,28 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Reduces the header to the minimum required by the PO format. It is a good middle ground between xgettext --omit-header option and the default header.",
         )
+        parser.add_argument(
+            "--no-flags",
+            action="store_true",
+            help="Don't write '#, flags' lines.",
+        )
+        parser.add_argument(
+            "--no-flag",
+            action="append",
+            choices=(
+                "fuzzy",
+                "python-format",
+                "python-brace-format",
+                "no-python-format",
+                "no-python-brace-format",
+            ),
+            help="Remove specific flag from the '#, flags' lines.",
+        )
+        parser.add_argument(
+            "--no-previous",
+            action="store_true",
+            help="Don't write '#| previous' lines.",
+        )
 
     @override
     def handle(self, *args, **options):
@@ -236,3 +258,27 @@ class Command(MakeMessagesCommand):
                     pofile.read_text(encoding="utf-8"),
                 )
             )
+
+        if self.options["no_flags"]:
+            lines = pofile.read_text(encoding="utf-8").split("\n")
+            lines_without_flags = (line for line in lines if not line.startswith("#, "))
+            pofile.write_text("\n".join(lines_without_flags), encoding="utf-8")
+
+        elif self.options["no_flag"]:
+            assert isinstance(self.options["no_flag"], list)
+
+            for flag in self.options["no_flag"]:
+                lines = pofile.read_text(encoding="utf-8").split("\n")
+                lines_without_flag = (
+                    line.replace(f", {flag}", "")
+                    for line in lines
+                    if line != f"#, {flag}"
+                )
+                pofile.write_text("\n".join(lines_without_flag), encoding="utf-8")
+
+        if self.options["no_previous"]:
+            lines = pofile.read_text(encoding="utf-8").split("\n")
+            lines_without_previous = (
+                line for line in lines if not line.startswith("#, ")
+            )
+            pofile.write_text("\n".join(lines_without_previous), encoding="utf-8")
