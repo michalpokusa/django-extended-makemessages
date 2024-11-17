@@ -77,9 +77,12 @@ class Command(MakeMessagesCommand):
 
     help = MakeMessagesCommand.help + (
         "\n\n"
-        "In addition to the options available in Django's `makemessages` command, this command "
+        "In addition to the options available in Django's makemessages command, this command "
         "exposes selected msgmerge/msguniq/msgattrib/xgettext options that make sense for usage "
         "in a Django project."
+        "\n\n"
+        "On top of that, this command also includes some custom options, which further simplify "
+        "managing translations in a Django projects, but are not part of GNU gettext tools."
     )
 
     @override
