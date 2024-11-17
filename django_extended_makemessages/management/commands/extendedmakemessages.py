@@ -77,7 +77,7 @@ class Command(MakeMessagesCommand):
             "--width",
             type=int,
             action="store",
-            help="Set the output page width. Long strings in the output files will be split across multiple lines in order to ensure that each line’s width (= number of screen columns) is less or equal to the given number.",
+            help="Set the output page width. Long strings in the output files will be split across multiple lines in order to ensure that each line's width (= number of screen columns) is less or equal to the given number.",
         )
         sort_group = parser.add_mutually_exclusive_group()
         sort_group.add_argument(
