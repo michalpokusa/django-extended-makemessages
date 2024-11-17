@@ -6,12 +6,66 @@ except ImportError:
         return func
 
 
+import re
+
 from argparse import _VersionAction, RawDescriptionHelpFormatter
+from collections import defaultdict
+from pathlib import Path
 
 from django.core.management.base import CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
 
 import django_extended_makemessages
+
+
+IMPORT_ALIAS_IGNORED_FOLDERS = {
+    "lib",
+    "site-packages",
+}
+
+GETTEXT_IMPORT_ALIAS_PATTERN = re.compile(
+    r"(gettext|gettext_lazy|gettext_noop|ngettext|ngettext_lazy|npgettext|npgettext_lazy|pgettext|pgettext_lazy) as ([A-Za-z_][A-Za-z0-9_]*)"
+)
+
+MINIMAL_PO_HEADER = (
+    r'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n\n'
+)
+
+
+def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
+    aliases: "dict[str, set[str]]" = defaultdict(set)
+
+    def is_inside_ignored_folders(file: Path) -> bool:
+        return set(file.relative_to(Path.cwd()).parts).intersection(
+            IMPORT_ALIAS_IGNORED_FOLDERS
+        )
+
+    files = (
+        file for file in root_path.rglob("*.py") if not is_inside_ignored_folders(file)
+    )
+
+    for file in files:
+        content = file.read_text(encoding="utf-8")
+
+        for match in GETTEXT_IMPORT_ALIAS_PATTERN.finditer(content):
+            gettext_function, alias = match.group(1), match.group(2)
+
+            aliases[gettext_function].add(alias)
+
+    return aliases
+
+
+def get_argnums(function: str):
+    if function in ("gettext", "gettext_lazy", "gettext_noop"):
+        return "1"
+    if function in ("ngettext", "ngettext_lazy"):
+        return "1,2"
+    if function in ("npgettext", "npgettext_lazy"):
+        return "1c,2,3"
+    if function in ("pgettext", "pgettext_lazy"):
+        return "1c,2"
+
+    raise ValueError(f"Unknown gettext function: {function}")
 
 
 class DjangoExtendedMakeMessagesHelpFormatter(
@@ -91,8 +145,21 @@ class Command(MakeMessagesCommand):
             help="Sort output by file location.",
         )
 
+        # Custom options
+        parser.add_argument(
+            "--detect-aliases",
+            action="store_true",
+            help="Detect gettext functions aliases in the project and add them as keywords to xgettext command.",
+        )
+        parser.add_argument(
+            "--minimal-header",
+            action="store_true",
+            help="Reduces the header to the minimum required by the PO format. It is a good middle ground between xgettext --omit-header option and the default header.",
+        )
+
     @override
     def handle(self, *args, **options):
+        self.options = options
 
         # Command specific options
         if options["no_fuzzy_matching"]:
@@ -140,4 +207,29 @@ class Command(MakeMessagesCommand):
             self.msgattrib_options.append("--sort-by-file")
             self.xgettext_options.append("--sort-by-file")
 
+        # Custom options
+        if options["detect_aliases"]:
+            self.xgettext_options += [
+                f"--keyword={alias}:{get_argnums(function)}"
+                for function, aliases in get_gettext_import_aliases(Path.cwd()).items()
+                for alias in aliases
+            ]
+
         super().handle(*args, **options)
+
+    @override
+    def write_po_file(self, potfile: str, locale: str):
+        super().write_po_file(potfile, locale)
+
+        pofile = Path(potfile).parent.joinpath(
+            locale, "LC_MESSAGES", f"{self.domain}.po"
+        )
+
+        if self.options["minimal_header"]:
+            pofile.write_text(
+                re.sub(
+                    r"msgid \"\"\nmsgstr \"\"[\s\S]+?\n\n",
+                    MINIMAL_PO_HEADER,
+                    pofile.read_text(encoding="utf-8"),
+                )
+            )
