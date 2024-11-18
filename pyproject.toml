@@ -8,7 +8,7 @@ packages = ["django_extended_makemessages"]
 [project]
 name = "django-extended-makemessages"
 version = "%PACKAGE_VERSION%"
-description = "..."
+description = "Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management."
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["django", "extended", "sorted", "messages", "translations", "makemessages", "gettext", "alias", "po", "i18n", "internationalization", "localization", "l10n", "msgmerge", "msguniq", "msgattrib", "xgettext"]
