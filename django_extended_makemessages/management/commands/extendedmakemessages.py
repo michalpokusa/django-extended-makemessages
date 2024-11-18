@@ -6,6 +6,7 @@ except ImportError:
         return func
 
 
+import ast
 import re
 
 from argparse import _VersionAction, RawDescriptionHelpFormatter
@@ -23,9 +24,18 @@ IMPORT_ALIAS_IGNORED_FOLDERS = {
     "site-packages",
 }
 
-GETTEXT_IMPORT_ALIAS_PATTERN = re.compile(
-    r"(gettext|gettext_lazy|gettext_noop|ngettext|ngettext_lazy|npgettext|npgettext_lazy|pgettext|pgettext_lazy) as ([A-Za-z_][A-Za-z0-9_]*)"
-)
+GETTEXT_FUNCTION_NAMES = {
+    "gettext_lazy",
+    "gettext_noop",
+    "gettext",
+    "ngettext_lazy",
+    "ngettext",
+    "npgettext_lazy",
+    "npgettext",
+    "pgettext_lazy",
+    "pgettext",
+}
+
 
 MINIMAL_PO_HEADER = (
     r'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n\n'
@@ -46,11 +56,23 @@ def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
 
     for file in files:
         content = file.read_text(encoding="utf-8")
+        tree = ast.parse(content, filename=str(file.relative_to(Path.cwd())))
 
-        for match in GETTEXT_IMPORT_ALIAS_PATTERN.finditer(content):
-            gettext_function, alias = match.group(1), match.group(2)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
 
-            aliases[gettext_function].add(alias)
+            if node.module != "django.utils.translation":
+                continue
+
+            for alias in node.names:
+                if alias.name not in GETTEXT_FUNCTION_NAMES:
+                    continue
+
+                if alias.asname is None:
+                    continue
+
+                aliases[alias.name].add(alias.asname)
 
     return aliases
 
