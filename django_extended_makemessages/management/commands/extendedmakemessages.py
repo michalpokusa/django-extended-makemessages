@@ -36,10 +36,7 @@ GETTEXT_FUNCTION_NAMES = {
     "pgettext",
 }
 
-
-MINIMAL_PO_HEADER = (
-    r'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n\n'
-)
+PO_FILE_HEADER_PATTERN = re.compile(r'(?<=\n)msgid ""\nmsgstr ""[\s\S]+?\n(?!")')
 
 
 def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
@@ -177,9 +174,9 @@ class Command(MakeMessagesCommand):
             help="Detect gettext functions aliases in the project and add them as keywords to xgettext command.",
         )
         parser.add_argument(
-            "--minimal-header",
+            "--keep-header",
             action="store_true",
-            help="Reduces the header to the minimum required by the PO format. It is a good middle ground between xgettext --omit-header option and the default header.",
+            help="Keep the header of the .po file exactly the same as it was before the command was run. Do nothing if the .po file does not exist.",
         )
         parser.add_argument(
             "--no-flags",
@@ -266,19 +263,25 @@ class Command(MakeMessagesCommand):
 
     @override
     def write_po_file(self, potfile: str, locale: str):
-        super().write_po_file(potfile, locale)
-
         pofile = Path(potfile).parent.joinpath(
             locale, "LC_MESSAGES", f"{self.domain}.po"
         )
 
-        if self.options["minimal_header"]:
+        if pofile.exists() and self.options["keep_header"]:
+            header_match = PO_FILE_HEADER_PATTERN.search(
+                pofile.read_text(encoding="utf-8")
+            )
+            header_to_keep = header_match.group() if header_match else None
+
+        super().write_po_file(potfile, locale)
+
+        if self.options["keep_header"] and header_to_keep is not None:
             pofile.write_text(
-                re.sub(
-                    r"msgid \"\"\nmsgstr \"\"[\s\S]+?\n\n",
-                    MINIMAL_PO_HEADER,
-                    pofile.read_text(encoding="utf-8"),
-                )
+                PO_FILE_HEADER_PATTERN.sub(
+                    header_to_keep.replace("\\", "\\\\"),  # Double escape for re.sub
+                    pofile.read_text(),
+                ),
+                encoding="utf-8",
             )
 
         if self.options["no_flags"]:
