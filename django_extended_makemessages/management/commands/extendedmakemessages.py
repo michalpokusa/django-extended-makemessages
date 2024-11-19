@@ -36,7 +36,9 @@ GETTEXT_FUNCTION_NAMES = {
     "pgettext",
 }
 
-PO_FILE_HEADER_PATTERN = re.compile(r'(?<=\n)msgid ""\nmsgstr ""[\s\S]+?\n(?!")')
+PO_FILE_HEADER_PATTERN = re.compile(
+    r"^msgid \"\"\nmsgstr \"\"[\s\S]+?\n(?!\")", re.MULTILINE
+)
 
 
 def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
