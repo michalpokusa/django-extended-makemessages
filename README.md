@@ -21,7 +21,7 @@ Extended version of Django's makemessages command that exposes selected GNU gett
 
 All the options of `makemessages` command are available, plus:
 
-- Sorting messages by `msgid` or by file location
+- Sorting messages by `msgid`
 - Disabling fuzzy translations
 - Detecting message marked with `gettext` functions imported as aliases
 - Keeping the header from constantly changing
@@ -50,21 +50,23 @@ All the options of `makemessages` command are available, plus:
 
 ## 🚀 Overview
 
-### Sorting messages by `msgid` or by file location
+### Sorting messages by `msgid`
 
 Django's `makemessages` command sorts messages based on location in the source code. This leads to situations where code refactoring can change in the order of messages in the `.po` file. As a result, the version control system shows a lot of changes that do not reflect the actual changes in the code and are confusing.
 
 Below you can see, that despite only adding the `"Delivery"` message, the diff shows more changes.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/sorting-messages-by-msgid.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/sorting-messages-by-msgid-1.png" width="100%"></img>
 
-Using the `--sort-output` option will sort messages by `msgid` and as consequence, the diff will show only added/removed messages.
+Using the `--sort-output` option sorts messages by `msgid`. As a result, the diff will show only added or removed messages, since the order in which they appear in the source code does not affect the generated `.po` files.
+
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/sorting-messages-by-msgid-2.png" width="100%"></img>
 
 ### Disabling fuzzy translations
 
 By default, similar messages are marked as fuzzy and their translation is inferred from previously translated strings within the same .po file. This often leads to incorrect translations and requires additional manual review.
 
-In the following example, `"Dessert"` (🍨🍰) is marked as fuzzy and its translation is inferred from the `"Desert"` (🐪🌵) message.
+In the following example, `"Dessert 🍨"` is marked as fuzzy and its translation is inferred from the `"Desert 🐪"` message.
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/disabling-fuzzy-translations-1.png" width="100%"></img>
 
