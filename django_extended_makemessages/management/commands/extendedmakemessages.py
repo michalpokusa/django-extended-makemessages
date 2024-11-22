@@ -11,7 +11,9 @@ import re
 
 from argparse import _VersionAction, RawDescriptionHelpFormatter
 from collections import defaultdict
+from hashlib import sha256
 from pathlib import Path
+from sys import exit
 
 from django.core.management.base import CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
@@ -202,6 +204,11 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Don't write '#| previous' lines.",
         )
+        parser.add_argument(
+            "--expect-no-changes",
+            action="store_true",
+            help="Exit with status 1 if .po file was added or changed after running the command.",
+        )
 
     @override
     def handle(self, *args, **options):
@@ -269,6 +276,15 @@ class Command(MakeMessagesCommand):
             locale, "LC_MESSAGES", f"{self.domain}.po"
         )
 
+        if self.options["expect_no_changes"]:
+            if pofile.exists():
+                pre_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
+            else:
+                self.stderr.write(
+                    f"File {pofile} was added after running the command. Exiting with status 1."
+                )
+                exit(1)
+
         if pofile.exists() and self.options["keep_header"]:
             header_match = PO_FILE_HEADER_PATTERN.search(
                 pofile.read_text(encoding="utf-8")
@@ -309,3 +325,12 @@ class Command(MakeMessagesCommand):
                 line for line in lines if not line.startswith("#, ")
             )
             pofile.write_text("\n".join(lines_without_previous), encoding="utf-8")
+
+        if self.options["expect_no_changes"]:
+            post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
+
+            if pre_pofile_digest != post_pofile_digest:
+                self.stderr.write(
+                    f"File {pofile} changed after running the command. Exiting with status 1."
+                )
+                exit(1)
