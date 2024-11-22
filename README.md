@@ -93,6 +93,22 @@ By doing so all messages marked with aliases will be detected and added to the `
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/detecting-messages-marked-with-alias-2-2.png" width="100%"></img>
 
+### Keeping the header from constantly changing
+
+Using the `--keep-header` argument preserves the header of the `.po` file exactly as it was before the command was run. This is useful when you want to keep the header unchanged, for example, if you do not want to include the `"Report-Msgid-Bugs-To"` or `"POT-Creation-Date"` fields in the `.po` file.
+
+### Extracting all strings
+
+By default, `makemessages` command extracts only strings marked for translation. However, you can use the `--extract-all` option to extract all strings from the source code.
+
+The usefullness of this is questionable, but `xgettext` command provides such option, so it is exposed here as well.
+
+### Removing flags from the output files
+
+Messages with placeholders are marked with flags, e.g. `python-format` or `python-brace-format`. These flags might be useful for translators, but are not required and can make the `.po` file harder to read.
+
+You can use the `--no-flags` option to remove all or the `--no-flag` option to remove specific flags from the output files.
+
 ## 🧰 Usage
 
 ```
