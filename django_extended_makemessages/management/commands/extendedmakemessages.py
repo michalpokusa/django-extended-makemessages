@@ -205,9 +205,9 @@ class Command(MakeMessagesCommand):
             help="Don't write '#| previous' lines.",
         )
         parser.add_argument(
-            "--expect-no-changes",
+            "--check",
             action="store_true",
-            help="Exit with status 1 if .po file was added or changed after running the command.",
+            help="Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.",
         )
         parser.add_argument(
             "--dry-run",
@@ -218,6 +218,9 @@ class Command(MakeMessagesCommand):
     @override
     def handle(self, *args, **options):
         self.options = options
+
+        if options["check"]:
+            options["dry_run"] = True
 
         # Command specific options
         if options["no_fuzzy_matching"]:
@@ -281,13 +284,11 @@ class Command(MakeMessagesCommand):
             locale, "LC_MESSAGES", f"{self.domain}.po"
         )
 
-        if self.options["expect_no_changes"]:
+        if self.options["check"]:
             if pofile.exists():
                 pre_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
             else:
-                self.stderr.write(
-                    f"File {pofile} was added after running the command. Exiting with status 1."
-                )
+                self.stderr.write(f"File {pofile} added. [--check]")
                 exit(1)
 
         if self.options["dry_run"]:
@@ -338,7 +339,7 @@ class Command(MakeMessagesCommand):
             )
             pofile.write_text("\n".join(lines_without_previous), encoding="utf-8")
 
-        if self.options["expect_no_changes"]:
+        if self.options["check"]:
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
         if self.options["dry_run"]:
@@ -347,11 +348,6 @@ class Command(MakeMessagesCommand):
             else:
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
-        if (
-            self.options["expect_no_changes"]
-            and pre_pofile_digest != post_pofile_digest
-        ):
-            self.stderr.write(
-                f"File {pofile} changed after running the command. Exiting with status 1."
-            )
+        if self.options["check"] and pre_pofile_digest != post_pofile_digest:
+            self.stderr.write(f"File {pofile} changed. [--check]")
             exit(1)

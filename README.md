@@ -27,6 +27,7 @@ All the options of `makemessages` command are available, plus:
 - Keeping the header from constantly changing
 - Extracting all string
 - Removing flags from the output files
+- Checking for outdated `.po` files
 
 ## 🔌 Instalation
 
@@ -109,6 +110,10 @@ Messages with placeholders are marked with flags, e.g. `python-format` or `pytho
 
 You can use the `--no-flags` option to remove all or the `--no-flag` option to remove specific flags from the output files.
 
+### Checking for outdated `.po` files
+
+Using `--check` allows you to verify that all translations are properly extracted and included in the .po files. It works similarly to the `makemigrations --check`, but for translations. You could add this as a step in your CI/CD pipeline to verify that all .po files are up to date.
+
 ## 🧰 Usage
 
 ```
@@ -118,7 +123,7 @@ usage:  extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE] [--domai
                              [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
                              [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
                              [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
-                             [--no-previous] [--expect-no-changes] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                             [--no-previous] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
                              [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
 
 Runs over the entire source tree of the current directory and pulls out all strings marked for translation. It creates (or updates)
@@ -177,8 +182,7 @@ options:
   --no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}
                         Remove specific flag from the '#, flags' lines.
   --no-previous         Don't write '#| previous' lines.
-  --expect-no-changes   Exit with status 1 if .po file was added or changed after running the
-                        command.
+  --check               Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.
   --dry-run             Restore the .po file to its original state after running the command.
   --version             Show program's version number and exit.
   -v {0,1,2,3}, --verbosity {0,1,2,3}
