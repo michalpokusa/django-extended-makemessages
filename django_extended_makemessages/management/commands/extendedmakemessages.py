@@ -209,6 +209,11 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Exit with status 1 if .po file was added or changed after running the command.",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Restore the .po file to its original state after running the command.",
+        )
 
     @override
     def handle(self, *args, **options):
@@ -285,6 +290,11 @@ class Command(MakeMessagesCommand):
                 )
                 exit(1)
 
+        if self.options["dry_run"]:
+            original_pofile_content = (
+                pofile.read_text(encoding="utf-8") if pofile.exists() else None
+            )
+
         if pofile.exists() and self.options["keep_header"]:
             header_match = PO_FILE_HEADER_PATTERN.search(
                 pofile.read_text(encoding="utf-8")
@@ -331,8 +341,17 @@ class Command(MakeMessagesCommand):
         if self.options["expect_no_changes"]:
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
-            if pre_pofile_digest != post_pofile_digest:
-                self.stderr.write(
-                    f"File {pofile} changed after running the command. Exiting with status 1."
-                )
-                exit(1)
+        if self.options["dry_run"]:
+            if original_pofile_content is None:
+                pofile.unlink()
+            else:
+                pofile.write_text(original_pofile_content, encoding="utf-8")
+
+        if (
+            self.options["expect_no_changes"]
+            and pre_pofile_digest != post_pofile_digest
+        ):
+            self.stderr.write(
+                f"File {pofile} changed after running the command. Exiting with status 1."
+            )
+            exit(1)
