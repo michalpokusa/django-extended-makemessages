@@ -81,35 +81,17 @@ It is a common practice to <a href="https://docs.djangoproject.com/en/5.1/topics
 
 That is not a problem, if you import only one function. However, if you need to import more than one function, you have to use its full name. This is because `xgettext` does not recognize aliases for functions other than `_`.
 
-```python
-from django.utils.translation import (
-    gettext as _,
-    gettext_lazy,
-    pgettext,
-    pgettext_lazy as pgtl,
-)
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/detecting-messages-marked-with-alias-1-1.png" width="100%"></img>
 
-_("This is fine.")  # ✅ Detected
-gettext_lazy("On no, I have to use the full function name.")  # ✅ Detected
-pgettext("opinion", "Yeah, that is not ideal.")  # ✅ Detected
-pgtl("fact", "This message will not be detected.")  # ❌ Not detected
-```
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/detecting-messages-marked-with-alias-1-2.png" width="100%"></img>
 
 You can manually add aliases using the `--keyword` option with <a href="https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html#Input-file-interpretation:~:text=%2D%2Dkeyword%5B%3Dkeywordspec%5D">this syntax</a>. However, a more convenient way is to use the `--detect-aliases` option, which will automatically recognize and add aliases for functions from the `django.utils.translation` module.
 
-```python
-from django.utils.translation import (
-    gettext as gt,
-    gettext_lazy as gtl,
-    pgettext as pgt,
-    pgettext_lazy as pgtl,
-)
+By doing so all messages marked with aliases will be detected and added to the `.po` file.
 
-gt("This is fine.")  # ✅ Detected
-gtl("And this also works.")  # ✅ Detected
-pgt("opinion", "Using custom aliases is quite handy.")  # ✅ Detected
-pgtl("fact", "This message will be detected.")  # ✅ Detected
-```
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/detecting-messages-marked-with-alias-2-1.png" width="100%"></img>
+
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/detecting-messages-marked-with-alias-2-2.png" width="100%"></img>
 
 ## 🧰 Usage
 
