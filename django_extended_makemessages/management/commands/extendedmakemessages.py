@@ -290,6 +290,8 @@ class Command(MakeMessagesCommand):
                 pofile.read_text(encoding="utf-8")
             )
             header_to_keep = header_match.group() if header_match else None
+        else:
+            header_to_keep = None
 
         super().write_po_file(potfile, locale)
 
