@@ -105,7 +105,7 @@ class Command(MakeMessagesCommand):
         "in a Django project."
         "\n\n"
         "On top of that, this command also includes some custom options, which further simplify "
-        "managing translations in a Django projects, but are not part of GNU gettext tools."
+        "managing translations, but are not part of GNU gettext tools."
     )
 
     @override
