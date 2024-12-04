@@ -39,7 +39,7 @@ GETTEXT_FUNCTION_NAMES = {
 }
 
 PO_FILE_HEADER_PATTERN = re.compile(
-    r"^msgid \"\"\nmsgstr \"\"[\s\S]+?\n(?!\")", re.MULTILINE
+    r"^msgid +\"\"\nmsgstr +\"[^\n]*\"\n( *\"[^\n]*\"\n)*", re.MULTILINE
 )
 
 
