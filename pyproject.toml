@@ -11,7 +11,7 @@ version = "%PACKAGE_VERSION%"
 description = "Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management."
 readme = "README.md"
 license = {file = "LICENSE"}
-keywords = ["django", "extended", "sorted", "messages", "translations", "makemessages", "gettext", "alias", "po", "i18n", "internationalization", "localization", "l10n", "msgmerge", "msguniq", "msgattrib", "xgettext"]
+keywords = ["django", "extended", "sort", "sorted", "messages", "translations", "makemessages", "gettext", "alias", "fuzzy", "check", "header", "po", "i18n", "internationalization", "localization", "l10n", "msgmerge", "msguniq", "msgattrib", "xgettext"]
 authors = [
   {name = "Michał Pokusa"},
 ]
