@@ -15,7 +15,7 @@ from hashlib import sha256
 from pathlib import Path
 from sys import exit
 
-from django.core.management.base import CommandParser, DjangoHelpFormatter
+from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
 
 import django_extended_makemessages
@@ -304,7 +304,16 @@ class Command(MakeMessagesCommand):
         else:
             header_to_keep = None
 
-        super().write_po_file(potfile, locale)
+        try:
+            super().write_po_file(potfile, locale)
+        except CommandError as error:
+            if self.options["dry_run"]:
+                if original_pofile_content is None:
+                    pofile.unlink()
+                else:
+                    pofile.write_text(original_pofile_content, encoding="utf-8")
+
+            raise error
 
         if self.options["keep_header"] and header_to_keep is not None:
             pofile.write_text(

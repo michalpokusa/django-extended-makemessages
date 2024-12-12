@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2024-12-12
+
+### Fixed
+
+- `--dry-run` option now restores the .po file to its original state when the `makemessages` command fails
+
 ## [1.1.1] - 2024-12-05
 
 ### Fixed
@@ -34,10 +40,11 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--detect-aliases` option that detects messages marked by functions from `django.utils.translation` module imported as aliases
 - `--keep-header` option that prevents the .po file header from being changed by makemessages
 - `--no-flags` option that removes all `#, ...` lines from the output
-- `--no-flag` option that removes specificflag from `#, ...` lines from the output
+- `--no-flag` option that removes specific flag from `#, ...` lines from the output
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.1.2]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/michalpokusa/django-extended-makemessages/tree/1.0.0
