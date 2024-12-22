@@ -117,14 +117,14 @@ Using `--check` allows you to verify that all translations are properly extracte
 ## 🧰 Usage
 
 ```
-usage:  extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE] [--domain DOMAIN] [--all] [--extension EXTENSIONS]
-                             [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
-                             [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
-                             [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
-                             [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
-                             [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
-                             [--no-previous] [--no-untranslated] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
-                             [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
+usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE] [--domain DOMAIN] [--all] [--extension EXTENSIONS]
+                                      [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
+                                      [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
+                                      [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
+                                      [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
+                                      [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
+                                      [--no-previous] [--no-untranslated] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                                      [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
 
 Runs over the entire source tree of the current directory and pulls out all strings marked for translation. It creates (or updates)
 a message file in the conf/locale (in the django tree) or locale (for projects and applications) directory.
