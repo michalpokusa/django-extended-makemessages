@@ -27,7 +27,7 @@ All the options of `makemessages` command are available, plus:
 - Keeping the header from constantly changing
 - Extracting all string
 - Removing flags from the output files
-- Checking for outdated `.po` files
+- Checking for untranslated messages and outdated `.po` files
 
 ## 🔌 Instalation
 
@@ -110,9 +110,15 @@ Messages with placeholders are marked with flags, e.g. `python-format` or `pytho
 
 You can use the `--no-flags` option to remove all or the `--no-flag` option to remove specific flags from the output files.
 
-### Checking for outdated `.po` files
+### Checking for untranslated messages and outdated `.po` files
 
-Using `--check` allows you to verify that all translations are properly extracted and included in the .po files. It works similarly to the `makemigrations --check`, but for translations. You could add this as a step in your CI/CD pipeline to verify that all .po files are up to date.
+It is not hard to forget about updating translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will do it for you.
+
+Option `--no-untranslated` checks for untranslated messages in the `.po` files. If any untranslated messages are found, the command will fail.
+
+Using `--check` allows you to verify that all translations are properly extracted and included in the `.po` files. It works similarly to the `makemigrations --check`, but for translations. If any `.po` file would be added or changed, the command will fail.
+
+Combining these options can help you keep your translations up to date.
 
 ## 🧰 Usage
 
