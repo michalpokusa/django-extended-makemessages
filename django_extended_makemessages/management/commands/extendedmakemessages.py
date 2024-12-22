@@ -17,6 +17,7 @@ from sys import exit
 
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
+from django.core.management.utils import popen_wrapper
 
 import django_extended_makemessages
 
@@ -210,6 +211,11 @@ class Command(MakeMessagesCommand):
             help="Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.",
         )
         parser.add_argument(
+            "--no-untranslated",
+            action="store_true",
+            help="Exit with a non-zero status if any untranslated messages are found in any .po file.",
+        )
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Restore the .po file to its original state after running the command.",
@@ -351,6 +357,17 @@ class Command(MakeMessagesCommand):
         if self.options["check"]:
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
+        if self.options["no_untranslated"]:
+            _, stderr, _ = popen_wrapper(["msgfmt", "--statistics", str(pofile)])
+
+            # e.g. "0 translated messages, 1 untranslated message.\n"
+            if "untranslated" in stderr:
+                _, untranslated_messages = stderr.strip(".\n").split(", ")
+
+            # e.g. "1 translated message.\n"
+            else:
+                untranslated_messages = None
+
         if self.options["dry_run"]:
             if original_pofile_content is None:
                 pofile.unlink()
@@ -359,4 +376,10 @@ class Command(MakeMessagesCommand):
 
         if self.options["check"] and pre_pofile_digest != post_pofile_digest:
             self.stderr.write(f"File {pofile} changed. [--check]")
+            exit(1)
+
+        if self.options["no_untranslated"] and untranslated_messages:
+            self.stderr.write(
+                f"File {pofile} contains {untranslated_messages}. [--no-untranslated]"
+            )
             exit(1)
