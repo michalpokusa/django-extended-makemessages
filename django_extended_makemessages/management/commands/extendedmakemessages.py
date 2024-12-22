@@ -9,7 +9,7 @@ except ImportError:
 import ast
 import re
 
-from argparse import _VersionAction, RawDescriptionHelpFormatter
+from argparse import RawDescriptionHelpFormatter
 from collections import defaultdict
 from hashlib import sha256
 from pathlib import Path
@@ -109,6 +109,11 @@ class Command(MakeMessagesCommand):
     )
 
     @override
+    def get_version(self) -> str:
+        """Return the version of the `extendedmakemessages` command."""
+        return django_extended_makemessages.__version__
+
+    @override
     def create_parser(self, prog_name: str, subcommand: str, **kwargs):
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.formatter_class = DjangoExtendedMakeMessagesHelpFormatter
@@ -117,11 +122,6 @@ class Command(MakeMessagesCommand):
     @override
     def add_arguments(self, parser: CommandParser):
         super().add_arguments(parser)
-
-        # Replace --version option
-        for action in parser._actions:
-            if isinstance(action, _VersionAction):
-                action.version = django_extended_makemessages.__version__
 
         # Command specific options
         parser.add_argument(
