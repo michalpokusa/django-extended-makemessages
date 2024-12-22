@@ -123,7 +123,7 @@ usage:  extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE] [--domai
                              [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
                              [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
                              [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
-                             [--no-previous] [--check] [--no-untranslated] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                             [--no-previous] [--no-untranslated] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
                              [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
 
 Runs over the entire source tree of the current directory and pulls out all strings marked for translation. It creates (or updates)
@@ -182,8 +182,8 @@ options:
   --no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}
                         Remove specific flag from the '#, flags' lines.
   --no-previous         Don't write '#| previous' lines.
-  --check               Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.
   --no-untranslated     Exit with a non-zero status if any untranslated messages are found in any .po file.
+  --check               Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.
   --dry-run             Restore the .po file to its original state after running the command.
   --version             Show program's version number and exit.
   -v {0,1,2,3}, --verbosity {0,1,2,3}

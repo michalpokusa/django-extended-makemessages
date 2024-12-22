@@ -206,14 +206,14 @@ class Command(MakeMessagesCommand):
             help="Don't write '#| previous' lines.",
         )
         parser.add_argument(
-            "--check",
-            action="store_true",
-            help="Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.",
-        )
-        parser.add_argument(
             "--no-untranslated",
             action="store_true",
             help="Exit with a non-zero status if any untranslated messages are found in any .po file.",
+        )
+        parser.add_argument(
+            "--check",
+            action="store_true",
+            help="Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.",
         )
         parser.add_argument(
             "--dry-run",
@@ -374,12 +374,12 @@ class Command(MakeMessagesCommand):
             else:
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
-        if self.options["check"] and pre_pofile_digest != post_pofile_digest:
-            self.stderr.write(f"File {pofile} changed. [--check]")
-            exit(1)
-
         if self.options["no_untranslated"] and untranslated_messages:
             self.stderr.write(
                 f"File {pofile} contains {untranslated_messages}. [--no-untranslated]"
             )
+            exit(1)
+
+        if self.options["check"] and pre_pofile_digest != post_pofile_digest:
+            self.stderr.write(f"File {pofile} changed. [--check]")
             exit(1)
