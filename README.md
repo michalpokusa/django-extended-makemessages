@@ -140,7 +140,7 @@ You must run this command with one of either the --locale, --exclude, or --all o
 In addition to the options available in Django's makemessages command, this command exposes selected
 msgmerge/msguniq/msgattrib/xgettext options that make sense for usage in a Django project.
 
-On top of that, this command also includes some custom options, which further simplify managing translations in a Djangoprojects,
+On top of that, this command also includes some custom options, which further simplify managing translations,
 but are not part of GNU gettext tools.
 
 options:
