@@ -43,13 +43,17 @@ PO_FILE_HEADER_PATTERN = re.compile(
     r"^msgid +\"\"\nmsgstr +\"[^\n]*\"\n( *\"[^\n]*\"\n)*", re.MULTILINE
 )
 
+NOT_PROVIDED = object()
+
 
 def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
     aliases: "dict[str, set[str]]" = defaultdict(set)
 
     def is_inside_ignored_folders(file: Path) -> bool:
-        return set(file.relative_to(Path.cwd()).parts).intersection(
-            IMPORT_ALIAS_IGNORED_FOLDERS
+        return bool(
+            set(file.relative_to(Path.cwd()).parts).intersection(
+                IMPORT_ALIAS_IGNORED_FOLDERS
+            )
         )
 
     files = (
@@ -71,10 +75,13 @@ def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
                 if alias.name not in GETTEXT_FUNCTION_NAMES:
                     continue
 
+                # e.g. from django.utils.translation import gettext
                 if alias.asname is None:
                     continue
 
-                aliases[alias.name].add(alias.asname)
+                # e.g. from django.utils.translation import gettext as gt
+                else:
+                    aliases[alias.name].add(alias.asname)
 
     return aliases
 
@@ -138,7 +145,7 @@ class Command(MakeMessagesCommand):
         parser.add_argument(
             "--keyword",
             nargs="?",
-            const=None,
+            const=NOT_PROVIDED,
             action="append",
             help="Specify keywordspec as an additional keyword to be looked for. Without a keywordspec, the option means to not use default keywords.",
         )
@@ -237,7 +244,7 @@ class Command(MakeMessagesCommand):
             assert isinstance(options["keyword"], list)
 
             # Remove default keywords
-            if None in options["keyword"]:
+            if NOT_PROVIDED in options["keyword"]:
                 self.xgettext_options.append("--keyword")
 
             # Add custom keywords
