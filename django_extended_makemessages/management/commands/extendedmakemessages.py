@@ -138,6 +138,17 @@ class Command(MakeMessagesCommand):
             help="Do not use fuzzy matching when an exact match is not found. This may speed up the operation considerably.",
         )
         parser.add_argument(
+            "--add-comments",
+            metavar="TAG",
+            nargs="?",
+            const=NOT_PROVIDED,
+            action="append",
+            help=(
+                "Place comment blocks starting with tag and preceding keyword lines in the output file. Without a tag, the option"
+                " means to put all comment blocks preceding keyword lines in the output file."
+            ),
+        )
+        parser.add_argument(
             "--extract-all",
             action="store_true",
             help="Extract all strings.",
@@ -238,6 +249,19 @@ class Command(MakeMessagesCommand):
         # Command specific options
         if options["no_fuzzy_matching"]:
             self.msgmerge_options.append("--no-fuzzy-matching")
+        if options["add_comments"]:
+            assert isinstance(options["add_comments"], list)
+
+            # Put all comment blocks preceding keyword lines in the output file
+            if NOT_PROVIDED in options["add_comments"]:
+                self.xgettext_options.append("--add-comments")
+
+            # Place comment blocks starting with tag and preceding keyword lines in the output file
+            self.xgettext_options += [
+                f"--add-comments={tag}"
+                for tag in options["add_comments"]
+                if isinstance(tag, str)
+            ]
         if options["extract_all"]:
             self.xgettext_options.append("--extract-all")
         if options["keyword"] is not None:
