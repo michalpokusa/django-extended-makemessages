@@ -28,6 +28,7 @@ All the options of `makemessages` command are available, plus:
 - Extracting all string
 - Removing flags from the output files
 - Checking for untranslated messages and outdated `.po` files
+- Copying comments from code to `.po` files for context
 
 ## 🔌 Instalation
 
@@ -120,13 +121,27 @@ Using `--check` allows you to verify that all translations are properly extracte
 
 Combining these options can help you keep your translations up to date.
 
+### Copying comments from code to `.po` files for context
+
+When translating messages, the context in which they are used is very important, as it and can greatly affect wording, grammar or even the translation itself.
+
+Functions like `pgettext` accept an `context` parameter, which can be used to <a href="https://docs.djangoproject.com/en/5.1/topics/i18n/translation/#contextual-markers">differentiate between messages with the same `msgid`</a>. However, in many cases, a longer, more detailed comment could provide a clearer description of how the message is used.
+
+Django's `makemessages` command by default only copies comments that start with `"Translators"`:
+
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/copying-comments-from-code-1.png" width="100%"></img>
+
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/images/copying-comments-from-code-2.png" width="100%"></img>
+
+You can use `--add-comments TAG` to override this, or use `--add-comments` to copy all comments.
+
 ## 🧰 Usage
 
 ```
 usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE] [--domain DOMAIN] [--all] [--extension EXTENSIONS]
                                       [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
                                       [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
-                                      [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
+                                      [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
                                       [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
                                       [--no-previous] [--no-untranslated] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
@@ -171,6 +186,9 @@ options:
   --keep-pot            Keep .pot file after making messages. Useful when debugging.
   --no-fuzzy-matching   Do not use fuzzy matching when an exact match is not found. This may speed up the operation
                         considerably.
+  --add-comments [TAG]  Place comment blocks starting with tag and preceding keyword lines in the output file.
+                        Without a tag, the option means to put all comment blocks preceding keyword lines
+                        in the output file.
   --extract-all         Extract all strings.
   --keyword [KEYWORD]   Specify keywordspec as an additional keyword to be looked for. Without a keywordspec, the option
                         means to not use default keywords.
