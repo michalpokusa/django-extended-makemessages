@@ -7,6 +7,7 @@ except ImportError:
 
 
 import ast
+import json
 import re
 
 from argparse import RawDescriptionHelpFormatter
@@ -17,7 +18,6 @@ from sys import exit
 
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
-from django.core.management.utils import popen_wrapper
 
 import django_extended_makemessages
 
@@ -40,7 +40,21 @@ GETTEXT_FUNCTION_NAMES = {
 }
 
 PO_FILE_HEADER_PATTERN = re.compile(
-    r"^msgid +\"\"\nmsgstr +\"[^\n]*\"\n( *\"[^\n]*\"\n)*", re.MULTILINE
+    r"^msgid +\"\"\nmsgstr +\"[^\n]*\"(?:\n *\"[^\n]*\")*", re.MULTILINE
+)
+
+PO_FILE_ENTRY_PATTERN = re.compile(
+    (
+        r"(^msgctxt +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
+        r"(^msgid +(?P<msgid>\"[^\n]*\"(?:\n *\"[^\n]*\")*)\n)"
+        r"(^msgid_plural +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
+        r"((?:^msgstr(?:\[\d+\])? +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)+)"
+    ),
+    re.MULTILINE,
+)
+
+PO_FILE_UNTRANSLATED_MSGSTR_PATTERN = re.compile(
+    r"^(?P<msgstr>msgstr(?:\[\d+\])?) +\"\"(?!\n *\")", re.MULTILINE
 )
 
 NOT_PROVIDED = object()
@@ -97,6 +111,10 @@ def get_argnums(function: str):
         return "1c,2"
 
     raise ValueError(f"Unknown gettext function: {function}")
+
+
+def parse_multiline_string(string: str) -> str:
+    return "".join(json.loads("[" + string.replace("\n", ",") + "]"))
 
 
 class DjangoExtendedMakeMessagesHelpFormatter(
@@ -389,15 +407,26 @@ class Command(MakeMessagesCommand):
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
         if self.options["no_untranslated"]:
-            _, stderr, _ = popen_wrapper(["msgfmt", "--statistics", str(pofile)])
+            contains_untranslated_msgstr = False
 
-            # e.g. "0 translated messages, 1 untranslated message.\n"
-            if "untranslated" in stderr:
-                _, untranslated_messages = stderr.strip(".\n").split(", ")
+            for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
+                entry = entry_match.group()
 
-            # e.g. "1 translated message.\n"
-            else:
-                untranslated_messages = None
+                untranslated_msgstr_match = PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.search(
+                    entry
+                )
+
+                if untranslated_msgstr_match is None:
+                    continue
+
+                contains_untranslated_msgstr = True
+
+                offset = entry_match.start() + untranslated_msgstr_match.start()
+                line_number = pofile.read_text().count("\n", 0, offset) + 1
+
+                untranslated_msgstr = untranslated_msgstr_match.group("msgstr")
+                untranslated_msgid = parse_multiline_string(entry_match.group("msgid"))
+                break
 
         if self.options["dry_run"]:
             if original_pofile_content is None:
@@ -405,9 +434,9 @@ class Command(MakeMessagesCommand):
             else:
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
-        if self.options["no_untranslated"] and untranslated_messages:
+        if self.options["no_untranslated"] and contains_untranslated_msgstr:
             self.stderr.write(
-                f"File {pofile} contains {untranslated_messages}. [--no-untranslated]"
+                f"File {pofile}:{line_number} contains untranslated {untranslated_msgstr} for msgid {repr(untranslated_msgid)}. [--no-untranslated]"
             )
             exit(1)
 
