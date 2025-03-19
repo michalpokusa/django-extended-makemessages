@@ -271,6 +271,7 @@ class Command(MakeMessagesCommand):
     @override
     def handle(self, *args, **options):
         self.options = options
+        self.options["ignore_patterns_without_default"] = options["ignore_patterns"][:]
 
         if options["check"]:
             options["dry_run"] = True
@@ -352,7 +353,7 @@ class Command(MakeMessagesCommand):
                 for value in options[option]:
                     compilemessages_argv.extend([f"--{option}", str(value)])
 
-            for value in options["ignore_patterns"]:
+            for value in options["ignore_patterns_without_default"]:
                 compilemessages_argv.extend(["--ignore", str(value)])
 
             # Single value options
