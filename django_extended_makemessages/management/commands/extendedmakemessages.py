@@ -136,6 +136,11 @@ class Command(MakeMessagesCommand):
     )
 
     @override
+    def run_from_argv(self, argv: list[str]) -> None:
+        self.prog_name = argv[0]
+        super().run_from_argv(argv)
+
+    @override
     def get_version(self) -> str:
         """Return the version of the `extendedmakemessages` command."""
         return django_extended_makemessages.__version__
@@ -340,7 +345,7 @@ class Command(MakeMessagesCommand):
         super().handle(*args, **options)
 
         if options["compile"]:
-            compilemessages_argv = ["manage.py", "compilemessages"]
+            compilemessages_argv = [self.prog_name, "compilemessages"]
 
             # Multiple values options
             for option in ["exclude", "locale"]:
