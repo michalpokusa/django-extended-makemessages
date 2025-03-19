@@ -16,6 +16,7 @@ from hashlib import sha256
 from pathlib import Path
 from sys import exit
 
+from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
 
@@ -256,6 +257,11 @@ class Command(MakeMessagesCommand):
             action="store_true",
             help="Restore the .po file to its original state after running the command.",
         )
+        parser.add_argument(
+            "--compile",
+            action="store_true",
+            help="Compile .po files to .mo files after running the command.",
+        )
 
     @override
     def handle(self, *args, **options):
@@ -332,6 +338,31 @@ class Command(MakeMessagesCommand):
             ]
 
         super().handle(*args, **options)
+
+        if options["compile"]:
+            compilemessages_argv = ["manage.py", "compilemessages"]
+
+            # Multiple values options
+            for option in ["exclude", "locale"]:
+                for value in options[option]:
+                    compilemessages_argv.extend([f"--{option}", str(value)])
+
+            for value in options["ignore_patterns"]:
+                compilemessages_argv.extend(["--ignore", str(value)])
+
+            # Single value options
+            for option in ["verbosity", "settings", "pythonpath"]:
+                if options[option]:
+                    compilemessages_argv.extend(
+                        [f"--{option.replace('_', '-')}", str(options[option])]
+                    )
+
+            # True/False options
+            for option in ["traceback", "no_color", "force_color"]:
+                if options[option]:
+                    compilemessages_argv.append(f"--{option.replace('_', '-')}")
+
+            ManagementUtility(compilemessages_argv).execute()
 
     @override
     def write_po_file(self, potfile: str, locale: str):

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-03-20
+
+### Added
+
+- `--compile` option that compiles .po files to .mo files without the need to run `compilemessages` command separately
+
 ## [1.4.0] - 2025-01-13
 
 ### Changed
@@ -62,6 +68,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.5.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.1.3...1.2.0

@@ -29,6 +29,7 @@ All the options of `makemessages` command are available, plus:
 - Removing flags from the output files
 - Checking for untranslated messages and outdated `.po` files
 - Copying comments from code to `.po` files for context
+- Compiling `.po` files to `.mo` without running `compilemessages` command separately
 
 ## 🔌 Instalation
 
@@ -135,6 +136,14 @@ Django's `makemessages` command by default only copies comments that start with 
 
 You can use `--add-comments TAG` to override this, or use `--add-comments` to copy all comments.
 
+### Compiling `.po` files to `.mo` without running `compilemessages` command separately
+
+Normally after the `.po` files change, <a href="https://docs.djangoproject.com/en/5.1/topics/i18n/translation/#compiling-message-files">you have to run the `compilemessages` command to compile them to `.mo` files</a>.
+This step is required, because without it, Django will not be able to use the translations.
+
+Most of the time, you will want to run `makemessages` and `compilemessages` one after another, or
+you could use the `--compile` option and do it in one step.
+
 ## 🧰 Usage
 
 ```
@@ -144,8 +153,8 @@ usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE]
                                       [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
                                       [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
-                                      [--no-previous] [--no-untranslated] [--check] [--dry-run] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
-                                      [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
+                                      [--no-previous] [--no-untranslated] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
+                                      [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
 
 Runs over the entire source tree of the current directory and pulls out all strings marked for translation. It creates (or updates)
 a message file in the conf/locale (in the django tree) or locale (for projects and applications) directory.
@@ -209,6 +218,7 @@ options:
   --no-untranslated     Exit with a non-zero status if any untranslated messages are found in any .po file.
   --check               Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.
   --dry-run             Restore the .po file to its original state after running the command.
+  --compile             Compile .po files to .mo files after running the command.
   --version             Show program's version number and exit.
   -v {0,1,2,3}, --verbosity {0,1,2,3}
                         Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
