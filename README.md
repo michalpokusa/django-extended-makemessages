@@ -142,7 +142,7 @@ Normally after the `.po` files change, <a href="https://docs.djangoproject.com/e
 This step is required, because without it, Django will not be able to use the translations.
 
 Most of the time, you will want to run `makemessages` and `compilemessages` one after another, or
-you could use the `--compile` option and do it in one step.
+you could do it in one step by using the `--compile` option.
 
 ## 🧰 Usage
 
