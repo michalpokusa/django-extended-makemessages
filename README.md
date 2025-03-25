@@ -34,7 +34,7 @@ All the options of `makemessages` command are available, plus:
 ## 🔌 Instalation
 
 > [!NOTE]
-> This package is useful only during development. There is no need to install it in production environments.
+> This package is useful only during development or CI/CD workflows. There is no need to install it in production environments.
 
 1. Install using `pip`:
 
