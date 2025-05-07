@@ -118,6 +118,28 @@ def parse_multiline_string(string: str) -> str:
     return "".join(json.loads("[" + string.replace("\n", ",") + "]"))
 
 
+def get_untranslated_msgstrs(pofile: Path) -> "set[tuple[Path, int, str, str]]":
+    untranslated_msgstrs = set()
+
+    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
+        entry = entry_match.group()
+
+        for untranslated_msgstr_match in PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.finditer(
+            entry
+        ):
+            offset = entry_match.start() + untranslated_msgstr_match.start()
+            line_number = pofile.read_text().count("\n", 0, offset) + 1
+
+            untranslated_msgstr = untranslated_msgstr_match.group("msgstr")
+            untranslated_msgid = parse_multiline_string(entry_match.group("msgid"))
+
+            untranslated_msgstrs.add(
+                (pofile, line_number, untranslated_msgstr, untranslated_msgid)
+            )
+
+    return untranslated_msgstrs
+
+
 class DjangoExtendedMakeMessagesHelpFormatter(
     DjangoHelpFormatter, RawDescriptionHelpFormatter
 ): ...
@@ -135,8 +157,13 @@ class Command(MakeMessagesCommand):
         "managing translations, but are not part of GNU gettext tools."
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.untranslated_msgstrs: "set[tuple[Path, int, str, str]]" = set()
+
     @override
-    def run_from_argv(self, argv: list[str]) -> None:
+    def run_from_argv(self, argv: "list[str]") -> None:
         self.prog_name = argv[0]
         super().run_from_argv(argv)
 
@@ -221,6 +248,11 @@ class Command(MakeMessagesCommand):
             help="Detect gettext functions aliases in the project and add them as keywords to xgettext command.",
         )
         parser.add_argument(
+            "--show-untranslated",
+            action="store_true",
+            help="Show number of untranslated messages and, in more verbose mode, their location in .po files.",
+        )
+        parser.add_argument(
             "--keep-header",
             action="store_true",
             help="Keep the header of the .po file exactly the same as it was before the command was run. Do nothing if the .po file does not exist.",
@@ -271,7 +303,10 @@ class Command(MakeMessagesCommand):
     @override
     def handle(self, *args, **options):
         self.options = options
-        self.options["ignore_patterns_without_default"] = options["ignore_patterns"][:]
+        options["ignore_patterns_without_default"] = options["ignore_patterns"][:]
+        options["track_untranslated"] = (
+            options["show_untranslated"] or options["no_untranslated"]
+        )
 
         if options["check"]:
             options["dry_run"] = True
@@ -359,9 +394,7 @@ class Command(MakeMessagesCommand):
             # Single value options
             for option in ["verbosity", "settings", "pythonpath"]:
                 if options[option]:
-                    compilemessages_argv.extend(
-                        [f"--{option.replace('_', '-')}", str(options[option])]
-                    )
+                    compilemessages_argv.extend([f"--{option}", str(options[option])])
 
             # True/False options
             for option in ["traceback", "no_color", "force_color"]:
@@ -369,6 +402,24 @@ class Command(MakeMessagesCommand):
                     compilemessages_argv.append(f"--{option.replace('_', '-')}")
 
             ManagementUtility(compilemessages_argv).execute()
+
+        if options["show_untranslated"] and self.untranslated_msgstrs:
+            unique_po_files = set(
+                pofile for pofile, _, _, _ in self.untranslated_msgstrs
+            )
+
+            self.stdout.write(
+                f"{len(self.untranslated_msgstrs)} untranslated message{'s' if len(self.untranslated_msgstrs) > 1 else ''}"
+                + f" in {len(unique_po_files)} .po file{'s' if len(unique_po_files) > 1 else ''}"
+            )
+
+            if self.verbosity > 1:
+                for pofile, line_number, msgstr, msgid in sorted(
+                    self.untranslated_msgstrs
+                ):
+                    self.stdout.write(
+                        f"untranslated {msgstr} {pofile}:{line_number} {repr(msgid)}"
+                    )
 
     @override
     def write_po_file(self, potfile: str, locale: str):
@@ -443,27 +494,8 @@ class Command(MakeMessagesCommand):
         if self.options["check"]:
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
-        if self.options["no_untranslated"]:
-            contains_untranslated_msgstr = False
-
-            for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
-                entry = entry_match.group()
-
-                untranslated_msgstr_match = PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.search(
-                    entry
-                )
-
-                if untranslated_msgstr_match is None:
-                    continue
-
-                contains_untranslated_msgstr = True
-
-                offset = entry_match.start() + untranslated_msgstr_match.start()
-                line_number = pofile.read_text().count("\n", 0, offset) + 1
-
-                untranslated_msgstr = untranslated_msgstr_match.group("msgstr")
-                untranslated_msgid = parse_multiline_string(entry_match.group("msgid"))
-                break
+        if self.options["track_untranslated"]:
+            self.untranslated_msgstrs.update(get_untranslated_msgstrs(pofile))
 
         if self.options["dry_run"]:
             if original_pofile_content is None:
@@ -471,9 +503,10 @@ class Command(MakeMessagesCommand):
             else:
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
-        if self.options["no_untranslated"] and contains_untranslated_msgstr:
+        if self.options["no_untranslated"] and self.untranslated_msgstrs:
+            pofile, line_number, msgstr, msgid = self.untranslated_msgstrs[0]
             self.stderr.write(
-                f"File {pofile}:{line_number} contains untranslated {untranslated_msgstr} for msgid {repr(untranslated_msgid)}. [--no-untranslated]"
+                f"File {pofile}:{line_number} contains untranslated {msgstr} for msgid {repr(msgid)}. [--no-untranslated]"
             )
             exit(1)
 
