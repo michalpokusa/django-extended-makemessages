@@ -160,7 +160,7 @@ class Command(MakeMessagesCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.untranslated_msgstrs: "set[tuple[Path, int, str, str]]" = set()
+        self.untranslated_messages: "set[tuple[Path, int, str, str]]" = set()
 
     @override
     def run_from_argv(self, argv: "list[str]") -> None:
@@ -403,19 +403,17 @@ class Command(MakeMessagesCommand):
 
             ManagementUtility(compilemessages_argv).execute()
 
-        if options["show_untranslated"] and self.untranslated_msgstrs:
-            unique_po_files = set(
-                pofile for pofile, _, _, _ in self.untranslated_msgstrs
-            )
+        if options["show_untranslated"] and self.untranslated_messages:
+            unique_po_files = set(message[0] for message in self.untranslated_messages)
 
             self.stdout.write(
-                f"{len(self.untranslated_msgstrs)} untranslated message{'s' if len(self.untranslated_msgstrs) > 1 else ''}"
+                f"{len(self.untranslated_messages)} untranslated message{'s' if len(self.untranslated_messages) > 1 else ''}"
                 + f" in {len(unique_po_files)} .po file{'s' if len(unique_po_files) > 1 else ''}"
             )
 
             if self.verbosity > 1:
                 for pofile, line_number, msgstr, msgid in sorted(
-                    self.untranslated_msgstrs
+                    self.untranslated_messages
                 ):
                     self.stdout.write(
                         f"untranslated {msgstr} {pofile}:{line_number} {repr(msgid)}"
@@ -423,8 +421,10 @@ class Command(MakeMessagesCommand):
 
     @override
     def write_po_file(self, potfile: str, locale: str):
-        pofile = Path(potfile).parent.joinpath(
-            locale, "LC_MESSAGES", f"{self.domain}.po"
+        pofile = (
+            Path(potfile)
+            .parent.joinpath(locale, "LC_MESSAGES", f"{self.domain}.po")
+            .absolute()
         )
 
         if self.options["check"]:
@@ -495,7 +495,7 @@ class Command(MakeMessagesCommand):
             post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
 
         if self.options["track_untranslated"]:
-            self.untranslated_msgstrs.update(get_untranslated_msgstrs(pofile))
+            self.untranslated_messages.update(get_untranslated_msgstrs(pofile))
 
         if self.options["dry_run"]:
             if original_pofile_content is None:
@@ -503,8 +503,8 @@ class Command(MakeMessagesCommand):
             else:
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
-        if self.options["no_untranslated"] and self.untranslated_msgstrs:
-            pofile, line_number, msgstr, msgid = self.untranslated_msgstrs[0]
+        if self.options["no_untranslated"] and self.untranslated_messages:
+            pofile, line_number, msgstr, msgid = sorted(self.untranslated_messages)[0]
             self.stderr.write(
                 f"File {pofile}:{line_number} contains untranslated {msgstr} for msgid {repr(msgid)}. [--no-untranslated]"
             )
