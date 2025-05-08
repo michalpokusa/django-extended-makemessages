@@ -42,7 +42,6 @@ All the options of `makemessages` command are available, plus:
     $ pip3 install django-extended-makemessages
     ```
 
-
 2. Add `'django_extended_makemessages'` to your `INSTALLED_APPS` setting.
     ```python
     INSTALLED_APPS = [
@@ -76,7 +75,6 @@ In the following example, `"Dessert 🍨"` is marked as fuzzy and its translatio
 You can use the `--no-fuzzy-matching` option to disable fuzzy matching. This way all messages will have to be translated manually.
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/disabling-fuzzy-translations-2.png" width="100%"></img>
-
 
 ### Detecting messages marked with `gettext` functions imported as aliases
 
@@ -114,11 +112,15 @@ You can use the `--no-flags` option to remove all or the `--no-flag` option to r
 
 ### Checking for untranslated messages and outdated `.po` files
 
-It is not hard to forget about updating translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will do it for you.
+It is not hard to forget about updating translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will check it for you.
+
+Option `--show-untranslated` will count all messages without translation and in more verbose mode, also display their locations in `.po` files.
+
+When more restrictive approach is needed, e.g. in CI/CD pipelines, you could consider using the following options that exit with a non-zero status code in specific situations.
 
 Option `--no-untranslated` checks for untranslated messages in the `.po` files. If any untranslated messages are found, the command will fail.
 
-Using `--check` allows you to verify that all translations are properly extracted and included in the `.po` files. It works similarly to the `makemigrations --check`, but for translations. If any `.po` file would be added or changed, the command will fail.
+Using `--check` option allows you to verify that all translations are properly extracted and included in the `.po` files. It works similarly to the `makemigrations --check`, but for translations. If any `.po` file would be added or changed, the command will fail.
 
 Combining these options can help you keep your translations up to date.
 
@@ -209,6 +211,7 @@ options:
   --sort-output         Generate sorted output.
   --sort-by-file        Sort output by file location.
   --detect-aliases      Detect gettext functions aliases in the project and add them as keywords to xgettext command.
+  --show-untranslated   Show number of untranslated messages and, in more verbose mode, their location in .po files.
   --keep-header         Keep the header of the .po file exactly the same as it was before the command was run. Do nothing
                         if the .po file does not exist.
   --no-flags            Don't write '#, flags' lines.
