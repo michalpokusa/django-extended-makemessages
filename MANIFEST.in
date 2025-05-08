@@ -1,0 +1,5 @@
+global-exclude *
+
+recursive-include django_extended_makemessages/ *.py
+
+include pyproject.toml

@@ -2,15 +2,12 @@
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["django_extended_makemessages"]
-
 [project]
 name = "django-extended-makemessages"
 version = "%PACKAGE_VERSION%"
 description = "Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management."
 readme = "README.md"
-license = {file = "LICENSE"}
+license-files = ["LICENSE"]
 keywords = ["django", "extended", "sort", "sorted", "messages", "translations", "makemessages", "gettext", "alias", "fuzzy", "untranslated", "check", "header", "po", "i18n", "internationalization", "localization", "l10n", "msgmerge", "msguniq", "msgattrib", "xgettext"]
 authors = [
   {name = "Michał Pokusa"},
@@ -30,7 +27,6 @@ classifiers = [
     "Framework :: Django :: 5.1",
     "Framework :: Django :: 5",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
@@ -52,3 +48,8 @@ dependencies = ["django>=3.2"]
 [project.urls]
 Repository = "https://github.com/michalpokusa/django-extended-makemessages"
 Changelog = "https://github.com/michalpokusa/django-extended-makemessages/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+exclude = [
+  "django_extended_makemessages/*"
+]
