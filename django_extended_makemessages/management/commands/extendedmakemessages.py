@@ -7,6 +7,7 @@ except ImportError:
 
 
 import ast
+import difflib
 import json
 import re
 
@@ -429,7 +430,9 @@ class Command(MakeMessagesCommand):
 
         if self.options["check"]:
             if pofile.exists():
-                pre_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
+                if self.verbosity > 1:
+                    pofile_content_before_write = pofile.read_text(encoding="utf-8")
+                pofile_digest_before_write = sha256(pofile.read_bytes()).hexdigest()
             else:
                 self.stderr.write(f"File {pofile} added. [--check]")
                 exit(1)
@@ -492,7 +495,10 @@ class Command(MakeMessagesCommand):
             pofile.write_text("\n".join(lines_without_previous), encoding="utf-8")
 
         if self.options["check"]:
-            post_pofile_digest = sha256(pofile.read_bytes()).hexdigest()
+            if self.verbosity > 1:
+                pofile_content_after_write = pofile.read_text(encoding="utf-8")
+            pofile_digest_after_write = sha256(pofile.read_bytes()).hexdigest()
+            pofile_changed = pofile_digest_before_write != pofile_digest_after_write
 
         if self.options["track_untranslated"]:
             self.untranslated_messages.update(get_untranslated_msgstrs(pofile))
@@ -510,6 +516,18 @@ class Command(MakeMessagesCommand):
             )
             exit(1)
 
-        if self.options["check"] and pre_pofile_digest != post_pofile_digest:
+        if self.options["check"] and pofile_changed:
             self.stderr.write(f"File {pofile} changed. [--check]")
+            if self.verbosity > 1:
+                relative_pofile_path = pofile.relative_to(Path.cwd())
+                self.stderr.write(
+                    "".join(
+                        difflib.unified_diff(
+                            pofile_content_before_write.splitlines(keepends=True),
+                            pofile_content_after_write.splitlines(keepends=True),
+                            fromfile=f"a/{relative_pofile_path}",
+                            tofile=f"b/{relative_pofile_path}",
+                        )
+                    )
+                )
             exit(1)
