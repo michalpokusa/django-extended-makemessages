@@ -47,6 +47,7 @@ PO_FILE_HEADER_PATTERN = re.compile(
 
 PO_FILE_ENTRY_PATTERN = re.compile(
     (
+        r"((?:^#[^\n]*\n)*)"
         r"(^msgctxt +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
         r"(^msgid +(?P<msgid>\"[^\n]*\"(?:\n *\"[^\n]*\")*)\n)"
         r"(^msgid_plural +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
