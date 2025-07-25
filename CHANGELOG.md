@@ -80,6 +80,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.7.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.6.0...1.7.0
 [1.6.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.3.0...1.4.0
