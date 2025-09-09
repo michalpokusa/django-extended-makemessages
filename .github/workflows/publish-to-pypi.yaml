@@ -24,9 +24,7 @@ jobs:
           python3 -m pip install --upgrade pip build twine
 
       - name: Build package
-        env:
-          PACKAGE_VERSION: ${{ github.ref_name }}
-        run: bash build-package.sh
+        run: python3 -m build
 
       - name: Publish to PyPI
         env:

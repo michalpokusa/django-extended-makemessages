@@ -1,1 +1,1 @@
-__version__ = "%PACKAGE_VERSION%"
+__version__ = "1.7.0"
