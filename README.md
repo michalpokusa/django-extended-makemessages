@@ -54,7 +54,7 @@ All the options of `makemessages` command are available, plus:
 
 ### Sorting messages by `msgid`
 
-Django's `makemessages` command sorts messages based on location in the source code. This leads to situations where code refactoring can change in the order of messages in the `.po` file. As a result, the version control system shows a lot of changes that do not reflect the actual changes in the code and are confusing.
+Django's `makemessages` command sorts messages based on location in the source code. This leads to situations where code refactoring can change the order of messages in the `.po` file. As a result, the version control system shows a lot of confusing changes that do not reflect the actual changes in the code.
 
 Below you can see, that despite only adding the `"Delivery"` message, the diff shows more changes.
 
