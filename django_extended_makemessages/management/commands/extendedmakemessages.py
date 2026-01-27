@@ -10,19 +10,18 @@ import ast
 import difflib
 import json
 import re
-
 from argparse import RawDescriptionHelpFormatter
 from collections import defaultdict
 from hashlib import sha256
 from pathlib import Path
 from sys import exit
+from typing import NamedTuple
 
 from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
 
 import django_extended_makemessages
-
 
 IMPORT_ALIAS_IGNORED_FOLDERS = {
     "lib",
@@ -120,7 +119,16 @@ def parse_multiline_string(string: str) -> str:
     return "".join(json.loads("[" + string.replace("\n", ",") + "]"))
 
 
-def get_untranslated_msgstrs(pofile: Path) -> "set[tuple[Path, int, str, str]]":
+class POFileUntranslatedMsgstr(NamedTuple):
+    pofile: Path
+    line_number: int
+    msgstr: str
+    "e.g. 'msgstr' or 'msgstr[1]' etc."
+    msgid: str
+    "e.g. 'Lorem ipsum'"
+
+
+def get_untranslated_msgstrs(pofile: Path) -> "set[POFileUntranslatedMsgstr]":
     untranslated_msgstrs = set()
 
     for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
@@ -132,11 +140,11 @@ def get_untranslated_msgstrs(pofile: Path) -> "set[tuple[Path, int, str, str]]":
             offset = entry_match.start() + untranslated_msgstr_match.start()
             line_number = pofile.read_text().count("\n", 0, offset) + 1
 
-            untranslated_msgstr = untranslated_msgstr_match.group("msgstr")
-            untranslated_msgid = parse_multiline_string(entry_match.group("msgid"))
+            msgstr = untranslated_msgstr_match.group("msgstr")
+            msgid = parse_multiline_string(entry_match.group("msgid"))
 
             untranslated_msgstrs.add(
-                (pofile, line_number, untranslated_msgstr, untranslated_msgid)
+                POFileUntranslatedMsgstr(pofile, line_number, msgstr, msgid)
             )
 
     return untranslated_msgstrs
@@ -148,7 +156,6 @@ class DjangoExtendedMakeMessagesHelpFormatter(
 
 
 class Command(MakeMessagesCommand):
-
     help = MakeMessagesCommand.help + (
         "\n\n"
         "In addition to the options available in Django's makemessages command, this command "
@@ -162,7 +169,7 @@ class Command(MakeMessagesCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.untranslated_messages: "set[tuple[Path, int, str, str]]" = set()
+        self.untranslated_messages: "set[POFileUntranslatedMsgstr]" = set()
 
     @override
     def run_from_argv(self, argv: "list[str]") -> None:
@@ -406,7 +413,7 @@ class Command(MakeMessagesCommand):
             ManagementUtility(compilemessages_argv).execute()
 
         if options["show_untranslated"] and self.untranslated_messages:
-            unique_po_files = set(message[0] for message in self.untranslated_messages)
+            unique_po_files = set(msg.pofile for msg in self.untranslated_messages)
 
             self.stdout.write(
                 f"{len(self.untranslated_messages)} untranslated message{'s' if len(self.untranslated_messages) > 1 else ''}"
@@ -414,11 +421,9 @@ class Command(MakeMessagesCommand):
             )
 
             if self.verbosity > 1:
-                for pofile, line_number, msgstr, msgid in sorted(
-                    self.untranslated_messages
-                ):
+                for msg in sorted(self.untranslated_messages):
                     self.stdout.write(
-                        f"untranslated {msgstr} {pofile}:{line_number} {repr(msgid)}"
+                        f"untranslated {msg.msgstr} {msg.pofile}:{msg.line_number} {repr(msg.msgid)}"
                     )
 
     @override
@@ -511,9 +516,9 @@ class Command(MakeMessagesCommand):
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
         if self.options["no_untranslated"] and self.untranslated_messages:
-            pofile, line_number, msgstr, msgid = sorted(self.untranslated_messages)[0]
+            msg = sorted(self.untranslated_messages)[0]
             self.stderr.write(
-                f"File {pofile}:{line_number} contains untranslated {msgstr} for msgid {repr(msgid)}. [--no-untranslated]"
+                f"File {msg.pofile}:{msg.line_number} contains untranslated {msg.msgstr} for msgid {repr(msg.msgid)}. [--no-untranslated]"
             )
             exit(1)
 
