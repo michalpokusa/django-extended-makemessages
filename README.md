@@ -6,7 +6,7 @@
         <img src="https://img.shields.io/pypi/v/django-extended-makemessages?color=0073b7"/>
     </a>
     <a href="https://www.djangoproject.com/">
-        <img src="https://img.shields.io/badge/3.2.x, 4.x.x, 5.x.x-a?style=flat&logo=django&label=django&labelColor=0c4b33&color=616161">
+        <img src="https://img.shields.io/badge/3.2.x--6.x.x-a?style=flat&logo=django&label=django&labelColor=0c4b33&color=616161">
     </a>
 </p>
 
@@ -78,7 +78,7 @@ You can use the `--no-fuzzy-matching` option to disable fuzzy matching. This way
 
 ### Detecting messages marked with `gettext` functions imported as aliases
 
-It is a common practice to <a href="https://docs.djangoproject.com/en/5.2/topics/i18n/translation/#standard-translation">import functions from `django.utils.translation` module as `_` alias</a>. This works because under the hood, `xgettext` command accepts it as one of the keywords for marking strings for translation.
+It is a common practice to <a href="https://docs.djangoproject.com/en/6.0/topics/i18n/translation/#standard-translation">import functions from `django.utils.translation` module as `_` alias</a>. This works because under the hood, `xgettext` command accepts it as one of the keywords for marking strings for translation.
 
 That is not a problem, if you import only one function. However, if you need to import more than one function, you have to use its full name. This is because `xgettext` does not recognize aliases for functions other than `_`.
 
@@ -129,7 +129,7 @@ Combining these options can help you keep your translations up to date.
 
 When translating messages, the context in which they are used is very important, as it and can greatly affect wording, grammar or even the translation itself.
 
-Functions like `pgettext` accept an `context` parameter, which can be used to <a href="https://docs.djangoproject.com/en/5.2/topics/i18n/translation/#contextual-markers">differentiate between messages with the same `msgid`</a>. However, in many cases, a longer, more detailed comment could provide a clearer description of how the message is used.
+Functions like `pgettext` accept an `context` parameter, which can be used to <a href="https://docs.djangoproject.com/en/6.0/topics/i18n/translation/#contextual-markers">differentiate between messages with the same `msgid`</a>. However, in many cases, a longer, more detailed comment could provide a clearer description of how the message is used.
 
 Django's `makemessages` command by default only copies comments that start with `"Translators"`:
 
@@ -141,7 +141,7 @@ You can use `--add-comments TAG` to override this, or use `--add-comments` to co
 
 ### Compiling `.po` files to `.mo` without running `compilemessages` command separately
 
-Normally after the `.po` files change, <a href="https://docs.djangoproject.com/en/5.2/topics/i18n/translation/#compiling-message-files">you have to run the `compilemessages` command to compile them to `.mo` files</a>.
+Normally after the `.po` files change, <a href="https://docs.djangoproject.com/en/6.0/topics/i18n/translation/#compiling-message-files">you have to run the `compilemessages` command to compile them to `.mo` files</a>.
 This step is required, because without it, Django will not be able to use the translations.
 
 Most of the time, you will want to run `makemessages` and `compilemessages` one after another, or
