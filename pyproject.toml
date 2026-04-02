@@ -46,7 +46,9 @@ classifiers = [
     "Topic :: Software Development :: Localization",
     "Topic :: Utilities",
 ]
-dependencies = ["django>=3.2"]
+dependencies = [
+    "django>=3.2",
+]
 
 [project.urls]
 Repository = "https://github.com/michalpokusa/django-extended-makemessages"

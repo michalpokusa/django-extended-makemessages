@@ -20,13 +20,9 @@ from typing import NamedTuple
 from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
+from django.core.management.commands.makemessages import TranslatableFile
 
 import django_extended_makemessages
-
-IMPORT_ALIAS_IGNORED_FOLDERS = {
-    "lib",
-    "site-packages",
-}
 
 GETTEXT_FUNCTION_NAMES = {
     "gettext_lazy",
@@ -62,43 +58,35 @@ PO_FILE_UNTRANSLATED_MSGSTR_PATTERN = re.compile(
 NOT_PROVIDED = object()
 
 
-def get_gettext_import_aliases(root_path: Path) -> "dict[str, set[str]]":
+def get_gettext_functions_import_aliases(path: Path) -> "dict[str, set[str]]":
     aliases: "dict[str, set[str]]" = defaultdict(set)
 
-    def is_inside_ignored_folders(file: Path) -> bool:
-        return bool(
-            set(file.relative_to(Path.cwd()).parts).intersection(
-                IMPORT_ALIAS_IGNORED_FOLDERS
-            )
-        )
+    if not (path.is_file() and path.suffix == ".py"):
+        return aliases
 
-    files = (
-        file for file in root_path.rglob("*.py") if not is_inside_ignored_folders(file)
-    )
+    content = path.read_text(encoding="utf-8")
+    tree = ast.parse(content, filename=str(path.relative_to(Path.cwd())))
 
-    for file in files:
-        content = file.read_text(encoding="utf-8")
-        tree = ast.parse(content, filename=str(file.relative_to(Path.cwd())))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
 
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
+        if node.module != "django.utils.translation":
+            continue
+
+        for alias in node.names:
+            if alias.name not in GETTEXT_FUNCTION_NAMES:
                 continue
 
-            if node.module != "django.utils.translation":
+            # e.g. from django.utils.translation import gettext
+            if alias.asname is None:
                 continue
 
-            for alias in node.names:
-                if alias.name not in GETTEXT_FUNCTION_NAMES:
-                    continue
+            # e.g. from django.utils.translation import gettext as gt
+            else:
+                aliases[alias.name].add(alias.asname)
 
-                # e.g. from django.utils.translation import gettext
-                if alias.asname is None:
-                    continue
-
-                # e.g. from django.utils.translation import gettext as gt
-                else:
-                    aliases[alias.name].add(alias.asname)
-
+    # e.g. {"gettext": {"gt"}, "gettext_lazy": {"gtl", "_l"}}
     return aliases
 
 
@@ -379,14 +367,6 @@ class Command(MakeMessagesCommand):
             self.msgattrib_options.append("--sort-by-file")
             self.xgettext_options.append("--sort-by-file")
 
-        # Custom options
-        if options["detect_aliases"]:
-            self.xgettext_options += [
-                f"--keyword={alias}:{get_argnums(function)}"
-                for function, aliases in get_gettext_import_aliases(Path.cwd()).items()
-                for alias in aliases
-            ]
-
         super().handle(*args, **options)
 
         if options["compile"]:
@@ -425,6 +405,31 @@ class Command(MakeMessagesCommand):
                     self.stdout.write(
                         f"untranslated {msg.msgstr} {msg.pofile}:{msg.line_number} {repr(msg.msgid)}"
                     )
+
+    @override
+    def process_locale_dir(self, locale_dir: str, files: list[TranslatableFile]):
+        if self.options["detect_aliases"]:
+            global_xgettext_options = self.xgettext_options[:]
+
+            file_paths = (Path(Path.cwd(), file.path) for file in files)
+            locale_dir_specific_keyword_xgettext_options = sorted(
+                {
+                    f"--keyword={alias}:{get_argnums(function)}"
+                    for path in file_paths
+                    for function, aliases in get_gettext_functions_import_aliases(
+                        path
+                    ).items()
+                    for alias in aliases
+                }
+            )
+
+            self.xgettext_options += locale_dir_specific_keyword_xgettext_options
+
+        try:
+            return super().process_locale_dir(locale_dir, files)
+        finally:
+            if self.options["detect_aliases"]:
+                self.xgettext_options = global_xgettext_options
 
     @override
     def write_po_file(self, potfile: str, locale: str):

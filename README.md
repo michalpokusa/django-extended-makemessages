@@ -90,6 +90,10 @@ You can manually add aliases using the `--keyword` option with <a href="https://
 
 By doing so all messages marked with aliases will be detected and added to the `.po` file.
 
+> [!NOTE]
+> `--detect-aliases` detects only direct imports from `django.utils.translation`, e.g. `from django.utils.translation import gettext as gt`.
+> It does not detect custom wrapper functions, nor aliases re-imported from user modules such as `from utils.i18n import gt`.
+
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-1.png" width="100%"></img>
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-2.png" width="100%"></img>
