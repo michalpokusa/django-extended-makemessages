@@ -119,14 +119,16 @@ class POFileUntranslatedMsgstr(NamedTuple):
 def get_untranslated_msgstrs(pofile: Path) -> "set[POFileUntranslatedMsgstr]":
     untranslated_msgstrs = set()
 
-    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
+    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
+        pofile.read_text(encoding="utf-8")
+    ):
         entry = entry_match.group()
 
         for untranslated_msgstr_match in PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.finditer(
             entry
         ):
             offset = entry_match.start() + untranslated_msgstr_match.start()
-            line_number = pofile.read_text().count("\n", 0, offset) + 1
+            line_number = pofile.read_text(encoding="utf-8").count("\n", 0, offset) + 1
 
             msgstr = untranslated_msgstr_match.group("msgstr")
             msgid = parse_multiline_string(entry_match.group("msgid"))
@@ -476,7 +478,7 @@ class Command(MakeMessagesCommand):
             pofile.write_text(
                 PO_FILE_HEADER_PATTERN.sub(
                     header_to_keep.replace("\\", "\\\\"),  # Double escape for re.sub
-                    pofile.read_text(),
+                    pofile.read_text(encoding="utf-8"),
                 ),
                 encoding="utf-8",
             )
