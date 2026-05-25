@@ -60,7 +60,7 @@ Below you can see, that despite only adding the `"Delivery"` message, the diff s
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-1.png" width="100%"></img>
 
-Using the `--sort-output` option sorts messages by `msgid`. As a result, the diff will show only added or removed messages, since the order in which they appear in the source code does not affect the generated `.po` files.
+Using the `--sort-by-msgid` option sorts messages alphabetically by `msgid`. As a result, the diff will show only added or removed messages, since the order in which they appear in the source code does not affect the generated `.po` files.
 
 <img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-2.png" width="100%"></img>
 
@@ -158,7 +158,7 @@ usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE]
                                       [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
                                       [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
                                       [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
-                                      [--sort-output | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
+                                      [--sort-by-msgid | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
                                       [--no-previous] [--no-untranslated] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
                                       [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
@@ -213,7 +213,8 @@ options:
   --width WIDTH         Set the output page width. Long strings in the output files will be split across multiple lines in
                         order to ensure that each line's width (= number of screen columns) is less or equal to the given
                         number.
-  --sort-output         Generate sorted output.
+  --sort-by-msgid, --sort-output
+                        Sort output alphabetically by msgid.
   --sort-by-file        Sort output by file location.
   --detect-aliases      Detect gettext functions aliases in the project and add them as keywords to xgettext command.
   --show-untranslated   Show number of untranslated messages and, in more verbose mode, their location in .po files.

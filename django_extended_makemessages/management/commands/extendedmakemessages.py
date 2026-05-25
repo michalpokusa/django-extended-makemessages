@@ -119,14 +119,16 @@ class POFileUntranslatedMsgstr(NamedTuple):
 def get_untranslated_msgstrs(pofile: Path) -> "set[POFileUntranslatedMsgstr]":
     untranslated_msgstrs = set()
 
-    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text()):
+    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
+        pofile.read_text(encoding="utf-8")
+    ):
         entry = entry_match.group()
 
         for untranslated_msgstr_match in PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.finditer(
             entry
         ):
             offset = entry_match.start() + untranslated_msgstr_match.start()
-            line_number = pofile.read_text().count("\n", 0, offset) + 1
+            line_number = pofile.read_text(encoding="utf-8").count("\n", 0, offset) + 1
 
             msgstr = untranslated_msgstr_match.group("msgstr")
             msgid = parse_multiline_string(entry_match.group("msgid"))
@@ -228,9 +230,10 @@ class Command(MakeMessagesCommand):
         )
         sort_group = parser.add_mutually_exclusive_group()
         sort_group.add_argument(
+            "--sort-by-msgid",
             "--sort-output",
             action="store_true",
-            help="Generate sorted output.",
+            help="Sort output alphabetically by msgid.",
         )
         sort_group.add_argument(
             "--sort-by-file",
@@ -356,11 +359,6 @@ class Command(MakeMessagesCommand):
             self.msguniq_options.append(f"--width={options['width']}")
             self.msgattrib_options.append(f"--width={options['width']}")
             self.xgettext_options.append(f"--width={options['width']}")
-        if options["sort_output"]:
-            self.msgmerge_options.append("--sort-output")
-            self.msguniq_options.append("--sort-output")
-            self.msgattrib_options.append("--sort-output")
-            self.xgettext_options.append("--sort-output")
         if options["sort_by_file"]:
             self.msgmerge_options.append("--sort-by-file")
             self.msguniq_options.append("--sort-by-file")
@@ -431,6 +429,22 @@ class Command(MakeMessagesCommand):
             if self.options["detect_aliases"]:
                 self.xgettext_options = global_xgettext_options
 
+    @staticmethod
+    def _sort_entries_in_po_file_by_msgid(pofile: Path):
+        entries = [
+            entry_match
+            for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
+                pofile.read_text(encoding="utf-8")
+            )
+        ]
+
+        entries.sort(key=lambda entry: parse_multiline_string(entry.group("msgid")))
+
+        pofile.write_text(
+            "\n".join(entry.group() for entry in entries),
+            encoding="utf-8",
+        )
+
     @override
     def write_po_file(self, potfile: str, locale: str):
         pofile = (
@@ -472,11 +486,14 @@ class Command(MakeMessagesCommand):
 
             raise error
 
+        if self.options["sort_by_msgid"]:
+            self._sort_entries_in_po_file_by_msgid(pofile)
+
         if self.options["keep_header"] and header_to_keep is not None:
             pofile.write_text(
                 PO_FILE_HEADER_PATTERN.sub(
                     header_to_keep.replace("\\", "\\\\"),  # Double escape for re.sub
-                    pofile.read_text(),
+                    pofile.read_text(encoding="utf-8"),
                 ),
                 encoding="utf-8",
             )

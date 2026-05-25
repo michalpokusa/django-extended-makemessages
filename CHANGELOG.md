@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-05-25
+
+### Added
+
+- `--sort-by-msgid` as more explicit alias for `--sort-output`, which is kept for backward compatibility
+
+### Changed
+
+- `--sort-output` implementation was refactored to Python as the `xgettext` command's `--sort-output` option was deprecated in version 0.22
+
 ## [1.8.0] - 2026-04-03
 
 ### Changed
@@ -86,6 +96,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.9.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.8.0...1.9.0
 [1.8.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.7.1...1.8.0
 [1.7.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.6.0...1.7.0
 [1.6.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.5.0...1.6.0
