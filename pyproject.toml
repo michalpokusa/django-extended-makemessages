@@ -1,10 +1,6 @@
-[build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "django-extended-makemessages"
-dynamic = ["version"]
+version = "1.9.0"
 description = "Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management."
 readme = "README.md"
 license-files = ["LICENSE"]
@@ -35,8 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3",
@@ -54,10 +49,9 @@ dependencies = [
 Repository = "https://github.com/michalpokusa/django-extended-makemessages"
 Changelog = "https://github.com/michalpokusa/django-extended-makemessages/blob/main/CHANGELOG.md"
 
-[tool.setuptools.dynamic]
-version = {attr = "django_extended_makemessages.__version__"}
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13"]
+build-backend = "uv_build"
 
-[tool.setuptools.packages.find]
-exclude = [
-  "django_extended_makemessages/*"
-]
+[tool.uv.build-backend]
+module-root = ""

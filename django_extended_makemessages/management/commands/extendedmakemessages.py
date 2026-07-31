@@ -13,6 +13,7 @@ import re
 from argparse import RawDescriptionHelpFormatter
 from collections import defaultdict
 from hashlib import sha256
+from importlib.metadata import version
 from pathlib import Path
 from sys import exit
 from typing import NamedTuple
@@ -21,8 +22,6 @@ from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
 from django.core.management.commands.makemessages import Command as MakeMessagesCommand
 from django.core.management.commands.makemessages import TranslatableFile
-
-import django_extended_makemessages
 
 GETTEXT_FUNCTION_NAMES = {
     "gettext_lazy",
@@ -169,7 +168,7 @@ class Command(MakeMessagesCommand):
     @override
     def get_version(self) -> str:
         """Return the version of the `extendedmakemessages` command."""
-        return django_extended_makemessages.__version__
+        return version("django-extended-makemessages")
 
     @override
     def create_parser(self, prog_name: str, subcommand: str, **kwargs):
