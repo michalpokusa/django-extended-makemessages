@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-08-22
+
+### Added
+
+- `--sort-untranslated-last` option that sorts untranslated messages after translated messages for easier review and translation of messages.
+
+### Fixed
+
+- Python `--sort-by-msgid` implementation was removing all messages marked as obsolete, which was caused by a bug in the regex used for matching entries in the .po file. The regex was updated to correctly match all entries, including those marked as obsolete.
+
 ## [1.9.0] - 2026-05-25
 
 ### Added
@@ -96,6 +106,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.10.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.9.0...1.10.0
 [1.9.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.8.0...1.9.0
 [1.8.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.7.1...1.8.0
 [1.7.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.6.0...1.7.0
