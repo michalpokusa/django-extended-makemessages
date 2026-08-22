@@ -16,7 +16,7 @@ from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
 from sys import exit
-from typing import NamedTuple
+from typing import Callable, NamedTuple
 
 from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
@@ -42,10 +42,10 @@ PO_FILE_HEADER_PATTERN = re.compile(
 PO_FILE_ENTRY_PATTERN = re.compile(
     (
         r"((?:^#[^\n]*\n)*)"
-        r"(^msgctxt +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
-        r"(^msgid +(?P<msgid>\"[^\n]*\"(?:\n *\"[^\n]*\")*)\n)"
-        r"(^msgid_plural +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)?"
-        r"((?:^msgstr(?:\[\d+\])? +\"[^\n]*\"(?:\n *\"[^\n]*\")*\n)+)"
+        r"(^(?:#~ )?msgctxt +\"[^\n]*\"(?:\n(?:#~ )? *\"[^\n]*\")*\n)?"
+        r"(^(?P<obsolete>#~ )?msgid +(?P<msgid>\"[^\n]*\"(?:\n(?:#~ )? *\"[^\n]*\")*)\n)"
+        r"(^(?:#~ )?msgid_plural +\"[^\n]*\"(?:\n(?:#~ )? *\"[^\n]*\")*\n)?"
+        r"((?:^(?:#~ )?msgstr(?:\[\d+\])? +\"[^\n]*\"(?:\n(?:#~ )? *\"[^\n]*\")*\n)+)"
     ),
     re.MULTILINE,
 )
@@ -100,6 +100,10 @@ def get_argnums(function: str):
         return "1c,2"
 
     raise ValueError(f"Unknown gettext function: {function}")
+
+
+def remove_obsolete_prefix(string: str) -> str:
+    return re.sub(r"^#~ ", "", string, flags=re.MULTILINE)
 
 
 def parse_multiline_string(string: str) -> str:
@@ -404,7 +408,7 @@ class Command(MakeMessagesCommand):
                     )
 
     @override
-    def process_locale_dir(self, locale_dir: str, files: list[TranslatableFile]):
+    def process_locale_dir(self, locale_dir: str, files: "list[TranslatableFile]"):
         if self.options["detect_aliases"]:
             global_xgettext_options = self.xgettext_options[:]
 
@@ -429,7 +433,7 @@ class Command(MakeMessagesCommand):
                 self.xgettext_options = global_xgettext_options
 
     @staticmethod
-    def _sort_entries_in_po_file_by_msgid(pofile: Path):
+    def _sort_entries_in_po_file(pofile: Path, key_func: "Callable[[re.Match], tuple]"):
         entries = [
             entry_match
             for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
@@ -437,7 +441,7 @@ class Command(MakeMessagesCommand):
             )
         ]
 
-        entries.sort(key=lambda entry: parse_multiline_string(entry.group("msgid")))
+        entries.sort(key=key_func)
 
         pofile.write_text(
             "\n".join(entry.group() for entry in entries),
@@ -486,7 +490,15 @@ class Command(MakeMessagesCommand):
             raise error
 
         if self.options["sort_by_msgid"]:
-            self._sort_entries_in_po_file_by_msgid(pofile)
+
+            def key_func(entry_match: re.Match):
+                is_obsolete = entry_match.group("obsolete") is not None
+                msgid = parse_multiline_string(
+                    remove_obsolete_prefix(entry_match.group("msgid"))
+                )
+                return (is_obsolete, msgid)
+
+            self._sort_entries_in_po_file(pofile, key_func)
 
         if self.options["keep_header"] and header_to_keep is not None:
             pofile.write_text(
