@@ -110,6 +110,10 @@ def parse_multiline_string(string: str) -> str:
     return "".join(json.loads("[" + string.replace("\n", ",") + "]"))
 
 
+def entry_has_untranslated_msgstr(entry: str) -> bool:
+    return bool(PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.search(entry))
+
+
 class POFileUntranslatedMsgstr(NamedTuple):
     pofile: Path
     line_number: int
@@ -242,6 +246,11 @@ class Command(MakeMessagesCommand):
             "--sort-by-file",
             action="store_true",
             help="Sort output by file location.",
+        )
+        parser.add_argument(
+            "--sort-untranslated-last",
+            action="store_true",
+            help="Sort untranslated messages after translated messages for easier review and translation.",
         )
 
         # Custom options
@@ -497,6 +506,18 @@ class Command(MakeMessagesCommand):
                     remove_obsolete_prefix(entry_match.group("msgid"))
                 )
                 return (is_obsolete, msgid)
+
+            self._sort_entries_in_po_file(pofile, key_func)
+
+        if self.options["sort_untranslated_last"]:
+
+            def key_func(entry_match: re.Match):
+                is_header = entry_match.start() == 0
+                is_obsolete = entry_match.group("obsolete") is not None
+                has_untranslated_msgstr = entry_has_untranslated_msgstr(
+                    entry_match.group()
+                )
+                return (not is_header, is_obsolete, has_untranslated_msgstr)
 
             self._sort_entries_in_po_file(pofile, key_func)
 

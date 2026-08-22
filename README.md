@@ -158,7 +158,7 @@ usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE]
                                       [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
                                       [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
                                       [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
-                                      [--sort-by-msgid | --sort-by-file] [--detect-aliases] [--keep-header] [--no-flags]
+                                      [--sort-by-msgid | --sort-by-file] [--sort-untranslated-last] [--detect-aliases] [--keep-header] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
                                       [--no-previous] [--no-untranslated] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
                                       [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
@@ -216,6 +216,8 @@ options:
   --sort-by-msgid, --sort-output
                         Sort output alphabetically by msgid.
   --sort-by-file        Sort output by file location.
+  --sort-untranslated-last
+                        Sort untranslated messages after translated messages for easier review and translation.
   --detect-aliases      Detect gettext functions aliases in the project and add them as keywords to xgettext command.
   --show-untranslated   Show number of untranslated messages and, in more verbose mode, their location in .po files.
   --keep-header         Keep the header of the .po file exactly the same as it was before the command was run. Do nothing
