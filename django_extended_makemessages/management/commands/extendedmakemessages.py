@@ -54,6 +54,8 @@ PO_FILE_UNTRANSLATED_MSGSTR_PATTERN = re.compile(
     r"^(?P<msgstr>msgstr(?:\[\d+\])?) +\"\"(?!\n *\")", re.MULTILINE
 )
 
+PO_FILE_FUZZY_FLAG_PATTERN = re.compile(r"^#, [^\n]*fuzzy[^\n]*", re.MULTILINE)
+
 NOT_PROVIDED = object()
 
 
@@ -114,7 +116,7 @@ def entry_has_untranslated_msgstr(entry: str) -> bool:
     return bool(PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.search(entry))
 
 
-class POFileUntranslatedMsgstr(NamedTuple):
+class UntranslatedMsgstr(NamedTuple):
     pofile: Path
     line_number: int
     msgstr: str
@@ -123,7 +125,7 @@ class POFileUntranslatedMsgstr(NamedTuple):
     "e.g. 'Lorem ipsum'"
 
 
-def get_untranslated_msgstrs(pofile: Path) -> "set[POFileUntranslatedMsgstr]":
+def get_untranslated_msgstrs(pofile: Path) -> "set[UntranslatedMsgstr]":
     untranslated_msgstrs = set()
 
     for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
@@ -141,10 +143,46 @@ def get_untranslated_msgstrs(pofile: Path) -> "set[POFileUntranslatedMsgstr]":
             msgid = parse_multiline_string(entry_match.group("msgid"))
 
             untranslated_msgstrs.add(
-                POFileUntranslatedMsgstr(pofile, line_number, msgstr, msgid)
+                UntranslatedMsgstr(pofile, line_number, msgstr, msgid)
             )
 
     return untranslated_msgstrs
+
+
+class FuzzyMessage(NamedTuple):
+    pofile: Path
+    line_number: int
+    msgid: str
+    "e.g. 'Lorem ipsum'"
+
+
+def get_fuzzy_messages(pofile: Path) -> "set[FuzzyMessage]":
+    fuzzy_messages = set()
+
+    for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
+        pofile.read_text(encoding="utf-8")
+    ):
+        entry = entry_match.group()
+
+        if entry_match.group("obsolete") is not None:
+            continue
+
+        fuzzy_flag_match = PO_FILE_FUZZY_FLAG_PATTERN.search(entry)
+
+        if not fuzzy_flag_match:
+            continue
+
+        offset = entry_match.start()
+        line_number = (
+            pofile.read_text(encoding="utf-8").count("\n", 0, offset)
+            + entry.count("\n", 0, fuzzy_flag_match.start())
+            + 1
+        )
+        msgid = parse_multiline_string(entry_match.group("msgid"))
+
+        fuzzy_messages.add(FuzzyMessage(pofile, line_number, msgid))
+
+    return fuzzy_messages
 
 
 class DjangoExtendedMakeMessagesHelpFormatter(
@@ -166,7 +204,8 @@ class Command(MakeMessagesCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.untranslated_messages: "set[POFileUntranslatedMsgstr]" = set()
+        self.untranslated_messages: "set[UntranslatedMsgstr]" = set()
+        self.fuzzy_messages: "set[FuzzyMessage]" = set()
 
     @override
     def run_from_argv(self, argv: "list[str]") -> None:
@@ -265,6 +304,11 @@ class Command(MakeMessagesCommand):
             help="Show number of untranslated messages and, in more verbose mode, their location in .po files.",
         )
         parser.add_argument(
+            "--show-fuzzy",
+            action="store_true",
+            help="Show number of fuzzy messages and, in more verbose mode, their location in .po files.",
+        )
+        parser.add_argument(
             "--keep-header",
             action="store_true",
             help="Keep the header of the .po file exactly the same as it was before the command was run. Do nothing if the .po file does not exist.",
@@ -297,6 +341,11 @@ class Command(MakeMessagesCommand):
             help="Exit with a non-zero status if any untranslated messages are found in any .po file.",
         )
         parser.add_argument(
+            "--no-fuzzy",
+            action="store_true",
+            help="Exit with a non-zero status if any fuzzy messages are found in any .po file.",
+        )
+        parser.add_argument(
             "--check",
             action="store_true",
             help="Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.",
@@ -319,6 +368,7 @@ class Command(MakeMessagesCommand):
         options["track_untranslated"] = (
             options["show_untranslated"] or options["no_untranslated"]
         )
+        options["track_fuzzy"] = options["show_fuzzy"] or options["no_fuzzy"]
 
         if options["check"]:
             options["dry_run"] = True
@@ -416,6 +466,20 @@ class Command(MakeMessagesCommand):
                         f"untranslated {msg.msgstr} {msg.pofile}:{msg.line_number} {repr(msg.msgid)}"
                     )
 
+        if options["show_fuzzy"] and self.fuzzy_messages:
+            unique_po_files = set(entry.pofile for entry in self.fuzzy_messages)
+
+            self.stdout.write(
+                f"{len(self.fuzzy_messages)} fuzzy message{'s' if len(self.fuzzy_messages) > 1 else ''}"
+                + f" in {len(unique_po_files)} .po file{'s' if len(unique_po_files) > 1 else ''}"
+            )
+
+            if self.verbosity > 1:
+                for entry in sorted(self.fuzzy_messages):
+                    self.stdout.write(
+                        f"fuzzy message {entry.pofile}:{entry.line_number} {repr(entry.msgid)}"
+                    )
+
     @override
     def process_locale_dir(self, locale_dir: str, files: "list[TranslatableFile]"):
         if self.options["detect_aliases"]:
@@ -443,15 +507,10 @@ class Command(MakeMessagesCommand):
 
     @staticmethod
     def _sort_entries_in_po_file(pofile: Path, key_func: "Callable[[re.Match], tuple]"):
-        entries = [
-            entry_match
-            for entry_match in PO_FILE_ENTRY_PATTERN.finditer(
-                pofile.read_text(encoding="utf-8")
-            )
-        ]
-
+        entries = list(
+            PO_FILE_ENTRY_PATTERN.finditer(pofile.read_text(encoding="utf-8"))
+        )
         entries.sort(key=key_func)
-
         pofile.write_text(
             "\n".join(entry.group() for entry in entries),
             encoding="utf-8",
@@ -563,6 +622,9 @@ class Command(MakeMessagesCommand):
         if self.options["track_untranslated"]:
             self.untranslated_messages.update(get_untranslated_msgstrs(pofile))
 
+        if self.options["track_fuzzy"]:
+            self.fuzzy_messages.update(get_fuzzy_messages(pofile))
+
         if self.options["dry_run"]:
             if original_pofile_content is None:
                 pofile.unlink()
@@ -570,9 +632,16 @@ class Command(MakeMessagesCommand):
                 pofile.write_text(original_pofile_content, encoding="utf-8")
 
         if self.options["no_untranslated"] and self.untranslated_messages:
-            msg = sorted(self.untranslated_messages)[0]
+            message = sorted(self.untranslated_messages)[0]
             self.stderr.write(
-                f"File {msg.pofile}:{msg.line_number} contains untranslated {msg.msgstr} for msgid {repr(msg.msgid)}. [--no-untranslated]"
+                f"File {message.pofile}:{message.line_number} contains untranslated {message.msgstr} for msgid {repr(message.msgid)}. [--no-untranslated]"
+            )
+            exit(1)
+
+        if self.options["no_fuzzy"] and self.fuzzy_messages:
+            message = sorted(self.fuzzy_messages)[0]
+            self.stderr.write(
+                f"File {message.pofile}:{message.line_number} contains fuzzy message for msgid {repr(message.msgid)}. [--no-fuzzy]"
             )
             exit(1)
 
