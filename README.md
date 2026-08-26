@@ -13,7 +13,7 @@
 Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management.
 
 - [🎉 Features](#-features)
-- [🔌 Instalation](#-instalation)
+- [🔌 Installation](#-installation)
 - [🚀 Overview](#-overview)
 - [🧰 Usage](#-usage)
 
@@ -27,19 +27,19 @@ All the options of `makemessages` command are available, plus:
 - Keeping the header from constantly changing
 - Extracting all string
 - Removing flags from the output files
-- Checking for untranslated messages and outdated `.po` files
+- Checking for untranslated or fuzzy messages and outdated `.po` files
 - Copying comments from code to `.po` files for context
 - Compiling `.po` files to `.mo` without running `compilemessages` command separately
 
-## 🔌 Instalation
+## 🔌 Installation
 
 > [!NOTE]
 > This package is useful only during development or CI/CD workflows. There is no need to install it in production environments.
 
-1. Install using `pip`:
+1. Install using e.g. `uv`:
 
     ```bash
-    $ pip3 install django-extended-makemessages
+    $ uv add --dev django-extended-makemessages
     ```
 
 2. Add `'django_extended_makemessages'` to your `INSTALLED_APPS` setting.
@@ -114,17 +114,21 @@ Messages with placeholders are marked with flags, e.g. `python-format` or `pytho
 
 You can use the `--no-flags` option to remove all or the `--no-flag` option to remove specific flags from the output files.
 
-### Checking for untranslated messages and outdated `.po` files
+### Checking for untranslated or fuzzy messages and outdated `.po` files
 
-It is not hard to forget about updating translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will check it for you.
+It is not hard to forget about updating or reviewing translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will check it for you:
 
-Option `--show-untranslated` will count all messages without translation and in more verbose mode, also display their locations in `.po` files.
+-  `--show-untranslated` will count all messages without translation and in more verbose mode, also display their locations in `.po` files.
+
+-  `--show-fuzzy` will count all fuzzy messages and in more verbose mode, also display their locations in `.po` files.
 
 When more restrictive approach is needed, e.g. in CI/CD pipelines, you could consider using the following options that exit with a non-zero status code in specific situations.
 
-Option `--no-untranslated` checks for untranslated messages in the `.po` files. If any untranslated messages are found, the command will fail.
+- `--no-untranslated` checks for untranslated messages in the `.po` files. If any untranslated messages are found, the command will fail.
 
-Using `--check` option allows you to verify that all translations are properly extracted and included in the `.po` files. It works similarly to the `makemigrations --check`, but for translations. If any `.po` file would be added or changed, the command will fail.
+- `--no-fuzzy` checks for fuzzy messages in the `.po` files. If any fuzzy messages are found, the command will fail.
+
+- `--check` option allows you to verify that all translations are properly extracted and included in the `.po` files. It works similarly to the `makemigrations --check`, but for translations. If any `.po` file would be added or changed, the command will fail.
 In more verbose mode, it will also display the unified diff of the changes that would be made.
 
 Combining these options can help you keep your translations up to date.
@@ -158,9 +162,10 @@ usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE]
                                       [--symlinks] [--ignore PATTERN] [--no-default-ignore] [--no-wrap] [--no-location]
                                       [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
                                       [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
-                                      [--sort-by-msgid | --sort-by-file] [--sort-untranslated-last] [--detect-aliases] [--keep-header] [--no-flags]
+                                      [--sort-by-msgid | --sort-by-file] [--detect-aliases] [--show-untranslated] [--show-fuzzy]
+                                      [--keep-header] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
-                                      [--no-previous] [--no-untranslated] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
+                                      [--no-previous] [--no-untranslated] [--no-fuzzy] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
                                       [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
 
 Runs over the entire source tree of the current directory and pulls out all strings marked for translation. It creates (or updates)
@@ -216,10 +221,9 @@ options:
   --sort-by-msgid, --sort-output
                         Sort output alphabetically by msgid.
   --sort-by-file        Sort output by file location.
-  --sort-untranslated-last
-                        Sort untranslated messages after translated messages for easier review and translation.
   --detect-aliases      Detect gettext functions aliases in the project and add them as keywords to xgettext command.
   --show-untranslated   Show number of untranslated messages and, in more verbose mode, their location in .po files.
+  --show-fuzzy          Show number of fuzzy messages and, in more verbose mode, their location in .po files.
   --keep-header         Keep the header of the .po file exactly the same as it was before the command was run. Do nothing
                         if the .po file does not exist.
   --no-flags            Don't write '#, flags' lines.
@@ -227,6 +231,7 @@ options:
                         Remove specific flag from the '#, flags' lines.
   --no-previous         Don't write '#| previous' lines.
   --no-untranslated     Exit with a non-zero status if any untranslated messages are found in any .po file.
+  --no-fuzzy            Exit with a non-zero status if any fuzzy messages are found in any .po file.
   --check               Exit with a non-zero status if any .po file would be added or changed. Implies --dry-run.
   --dry-run             Restore the .po file to its original state after running the command.
   --compile             Compile .po files to .mo files after running the command.

@@ -1,6 +1,6 @@
 [project]
 name = "django-extended-makemessages"
-version = "1.10.0"
+version = "1.11.0"
 description = "Extended version of Django's makemessages command that exposes selected GNU gettext tools options and adds new custom options, which further simplify message detection and translation files management."
 readme = "README.md"
 license-files = ["LICENSE"]
