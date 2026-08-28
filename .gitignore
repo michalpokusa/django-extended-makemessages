@@ -3,6 +3,6 @@
 __pycache__/
 *.pyc
 
-build/
 dist/
-*.egg-info/
+
+uv.lock
