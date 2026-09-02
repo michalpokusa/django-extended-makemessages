@@ -591,7 +591,7 @@ class Command(MakeMessagesCommand):
         if self.options["no_previous"]:
             lines = pofile.read_text(encoding="utf-8").split("\n")
             lines_without_previous = (
-                line for line in lines if not line.startswith("#, ")
+                line for line in lines if not line.startswith("#| ")
             )
             pofile.write_text("\n".join(lines_without_previous), encoding="utf-8")
 
