@@ -110,9 +110,9 @@ The usefullness of this is questionable, but `xgettext` command provides such op
 
 ### Removing flags from the output files
 
-Messages with placeholders are marked with flags, e.g. `python-format` or `python-brace-format`. These flags might be useful for translators, but are not required and can make the `.po` file harder to read.
+Messages can be marked with flags, e.g. `fuzzy`, `python-format` or `python-brace-format`. These flags might be useful for translators, but are not required and can make the `.po` file harder to read.
 
-You can use the `--no-flags` option to remove all or the `--no-flag` option to remove specific flags from the output files.
+You can use the `--no-flags` option to remove all supported flags, `--no-sticky-flags` to remove gettext sticky flags, `--no-workflow-flags` to remove workflow flags such as `fuzzy`, or `--no-flag` to remove specific flags from the output files.
 
 ### Checking for untranslated or fuzzy messages and outdated `.po` files
 
@@ -163,7 +163,7 @@ usage: manage.py extendedmakemessages [-h] [--locale LOCALE] [--exclude EXCLUDE]
                                       [--add-location [{full,file,never}]] [--no-obsolete] [--keep-pot] [--no-fuzzy-matching]
                                       [--add-comments [TAG]] [--extract-all] [--keyword [KEYWORD]] [--force-po] [--indent] [--width WIDTH]
                                       [--sort-by-msgid | --sort-by-file] [--detect-aliases] [--show-untranslated] [--show-fuzzy]
-                                      [--keep-header] [--no-flags]
+                                      [--keep-header] [--no-sticky-flags] [--no-workflow-flags] [--no-flags]
                                       [--no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}]
                                       [--no-previous] [--no-untranslated] [--no-fuzzy] [--check] [--dry-run] [--compile] [--version] [-v {0,1,2,3}]
                                       [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
@@ -226,8 +226,10 @@ options:
   --show-fuzzy          Show number of fuzzy messages and, in more verbose mode, their location in .po files.
   --keep-header         Keep the header of the .po file exactly the same as it was before the command was run. Do nothing
                         if the .po file does not exist.
+  --no-sticky-flags     Remove sticky flags from the '#, flags' lines.
+  --no-workflow-flags   Remove workflow flags from the '#, flags' lines.
   --no-flags            Don't write '#, flags' lines.
-  --no-flag {fuzzy,python-format,python-brace-format,no-python-format,no-python-brace-format}
+  --no-flag {python-format,no-python-format,python-brace-format,no-python-brace-format,javascript-format,no-javascript-format,no-wrap,fuzzy}
                         Remove specific flag from the '#, flags' lines.
   --no-previous         Don't write '#| previous' lines.
   --no-untranslated     Exit with a non-zero status if any untranslated messages are found in any .po file.

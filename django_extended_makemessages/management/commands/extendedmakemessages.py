@@ -16,7 +16,7 @@ from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
 from sys import exit
-from typing import Callable, NamedTuple
+from typing import Callable, Iterable, NamedTuple
 
 from django.core.management import ManagementUtility
 from django.core.management.base import CommandError, CommandParser, DjangoHelpFormatter
@@ -34,6 +34,20 @@ GETTEXT_FUNCTION_NAMES = {
     "pgettext_lazy",
     "pgettext",
 }
+
+STICKY_FLAGS = (
+    "python-format",
+    "no-python-format",
+    "python-brace-format",
+    "no-python-brace-format",
+    "javascript-format",
+    "no-javascript-format",
+    "no-wrap",
+)
+
+WORKFLOW_FLAGS = ("fuzzy",)
+
+FLAGS = STICKY_FLAGS + WORKFLOW_FLAGS
 
 PO_FILE_HEADER_PATTERN = re.compile(
     r"^msgid +\"\"\nmsgstr +\"[^\n]*\"(?:\n *\"[^\n]*\")*", re.MULTILINE
@@ -114,6 +128,31 @@ def parse_multiline_string(string: str) -> str:
 
 def entry_has_untranslated_msgstr(entry: str) -> bool:
     return bool(PO_FILE_UNTRANSLATED_MSGSTR_PATTERN.search(entry))
+
+
+def remove_flag_lines_from_po_file(pofile: Path):
+    input_lines = pofile.read_text(encoding="utf-8").split("\n")
+    output_lines = [line for line in input_lines if not line.startswith("#, ")]
+
+    pofile.write_text("\n".join(output_lines), encoding="utf-8")
+
+
+def remove_flags_from_po_file(pofile: Path, flags: "Iterable[str]"):
+    input_lines = pofile.read_text(encoding="utf-8").split("\n")
+    output_lines = []
+
+    for line in input_lines:
+        if not line.startswith("#, "):
+            output_lines.append(line)
+            continue
+
+        flags_in_line = [flag.strip() for flag in line.removeprefix("#, ").split(",")]
+        flags_to_keep = [flag for flag in flags_in_line if flag not in flags]
+
+        if flags_to_keep:
+            output_lines.append("#, " + ", ".join(flags_to_keep))
+
+    pofile.write_text("\n".join(output_lines), encoding="utf-8")
 
 
 class UntranslatedMsgstr(NamedTuple):
@@ -308,6 +347,16 @@ class Command(MakeMessagesCommand):
             help="Keep the header of the .po file exactly the same as it was before the command was run. Do nothing if the .po file does not exist.",
         )
         parser.add_argument(
+            "--no-sticky-flags",
+            action="store_true",
+            help="Remove sticky flags from the '#, flags' lines.",
+        )
+        parser.add_argument(
+            "--no-workflow-flags",
+            action="store_true",
+            help="Remove workflow flags from the '#, flags' lines.",
+        )
+        parser.add_argument(
             "--no-flags",
             action="store_true",
             help="Don't write '#, flags' lines.",
@@ -315,13 +364,7 @@ class Command(MakeMessagesCommand):
         parser.add_argument(
             "--no-flag",
             action="append",
-            choices=(
-                "fuzzy",
-                "python-format",
-                "python-brace-format",
-                "no-python-format",
-                "no-python-brace-format",
-            ),
+            choices=FLAGS,
             help="Remove specific flag from the '#, flags' lines.",
         )
         parser.add_argument(
@@ -572,21 +615,15 @@ class Command(MakeMessagesCommand):
             )
 
         if self.options["no_flags"]:
-            lines = pofile.read_text(encoding="utf-8").split("\n")
-            lines_without_flags = (line for line in lines if not line.startswith("#, "))
-            pofile.write_text("\n".join(lines_without_flags), encoding="utf-8")
-
-        elif self.options["no_flag"]:
-            assert isinstance(self.options["no_flag"], list)
-
-            for flag in self.options["no_flag"]:
-                lines = pofile.read_text(encoding="utf-8").split("\n")
-                lines_without_flag = (
-                    line.replace(f", {flag}", "")
-                    for line in lines
-                    if line != f"#, {flag}"
-                )
-                pofile.write_text("\n".join(lines_without_flag), encoding="utf-8")
+            remove_flag_lines_from_po_file(pofile)
+        else:
+            if self.options["no_sticky_flags"]:
+                remove_flags_from_po_file(pofile, STICKY_FLAGS)
+            if self.options["no_workflow_flags"]:
+                remove_flags_from_po_file(pofile, WORKFLOW_FLAGS)
+            if self.options["no_flag"]:
+                assert isinstance(self.options["no_flag"], list)
+                remove_flags_from_po_file(pofile, set(self.options["no_flag"]))
 
         if self.options["no_previous"]:
             lines = pofile.read_text(encoding="utf-8").split("\n")

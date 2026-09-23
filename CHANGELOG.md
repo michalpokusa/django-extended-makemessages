@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-09-23
+
+### Added
+
+- `--no-sticky-flags` and `--no-workflow-flags` options that remove respectively sticky (e.g. `python-format` or `no-wrap`) or workflow (e.g. `fuzzy`) flags from the output
+- `javascript-format`, `no-javascript-format`, `no-wrap` flags to supported flags
+
 ## [1.11.0] - 2026-08-28
 
 ### Added
@@ -116,6 +123,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `--no-previous` option that removes all `'#| ...'` lines from the output
 - README.md file with overview, installation and usage instructions
 
+[1.12.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.11.0...1.12.0
 [1.11.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.10.0...1.11.0
 [1.10.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.9.0...1.10.0
 [1.9.0]: https://github.com/michalpokusa/django-extended-makemessages/compare/1.8.0...1.9.0
