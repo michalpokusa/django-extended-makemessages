@@ -58,11 +58,11 @@ Django's `makemessages` command sorts messages based on location in the source c
 
 Below you can see, that despite only adding the `"Delivery"` message, the diff shows more changes.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-1.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-1.png"></img>
 
 Using the `--sort-by-msgid` option sorts messages alphabetically by `msgid`. As a result, the diff will show only added or removed messages, since the order in which they appear in the source code does not affect the generated `.po` files.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-2.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/sorting-messages-by-msgid-2.png"></img>
 
 ### Disabling fuzzy translations
 
@@ -70,11 +70,11 @@ By default, similar messages are marked as fuzzy and their translation is inferr
 
 In the following example, `"Dessert 🍨"` is marked as fuzzy and its translation is inferred from the `"Desert 🐪"` message.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/disabling-fuzzy-translations-1.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/disabling-fuzzy-translations-1.png"></img>
 
 You can use the `--no-fuzzy-matching` option to disable fuzzy matching. This way all messages will have to be translated manually.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/disabling-fuzzy-translations-2.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/disabling-fuzzy-translations-2.png"></img>
 
 ### Detecting messages marked with `gettext` functions imported as aliases
 
@@ -82,9 +82,9 @@ It is a common practice to <a href="https://docs.djangoproject.com/en/6.0/topics
 
 That is not a problem, if you import only one function. However, if you need to import more than one function, you have to use its full name. This is because `xgettext` does not recognize aliases for functions other than `_`.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-1-1.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-1-1.png" ></img>
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-1-2.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-1-2.png" ></img>
 
 You can manually add aliases using the `--keyword` option with <a href="https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html#Input-file-interpretation:~:text=%2D%2Dkeyword%5B%3Dkeywordspec%5D">this syntax</a>. However, a more convenient way is to use the `--detect-aliases` option, which will automatically recognize and add aliases for functions from the `django.utils.translation` module.
 
@@ -94,9 +94,9 @@ By doing so all messages marked with aliases will be detected and added to the `
 > `--detect-aliases` detects only direct imports from `django.utils.translation`, e.g. `from django.utils.translation import gettext as gt`.
 > It does not detect custom wrapper functions, nor aliases re-imported from user modules such as `from utils.i18n import gt`.
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-1.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-1.png" ></img>
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-2.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/detecting-messages-marked-with-alias-2-2.png" ></img>
 
 ### Keeping the header from constantly changing
 
@@ -144,9 +144,9 @@ Functions like `pgettext` accept an `context` parameter, which can be used to <a
 
 Django's `makemessages` command by default only copies comments that start with `"Translators"`:
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/copying-comments-from-code-1.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/copying-comments-from-code-1.png" ></img>
 
-<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/copying-comments-from-code-2.png" width="100%"></img>
+<img src="https://raw.githubusercontent.com/michalpokusa/django-extended-makemessages/main/docs/copying-comments-from-code-2.png" ></img>
 
 You can use `--add-comments TAG` to override this, or use `--add-comments` to copy all comments.
 
