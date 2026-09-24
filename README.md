@@ -114,6 +114,9 @@ Messages can be marked with flags, e.g. `fuzzy`, `python-format` or `python-brac
 
 You can use the `--no-flags` option to remove all supported flags, `--no-sticky-flags` to remove gettext sticky flags, `--no-workflow-flags` to remove workflow flags such as `fuzzy`, or `--no-flag` to remove specific flags from the output files.
 
+> [!WARNING]
+> Using `--no-flags`/`--no-workflow-flags` without disabling fuzzy matching can lead to unexpected problems with detecting fuzzy messages and incorrect translations, because flags are removed after the `.po` file is processed. Use it with caution or resort to `--no-fuzzy-matching` or `--no-sticky-flags` options instead.
+
 ### Checking for untranslated or fuzzy messages and outdated `.po` files
 
 It is not hard to forget about updating or reviewing translations after changing the source code. To prevent this, you can add a step to your CI/CD pipeline or a helper script, that will check it for you:
